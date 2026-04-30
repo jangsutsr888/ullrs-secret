@@ -1,33 +1,16 @@
 """Read standard weather JSON, compute wet bulb temperatures, plot and export."""
 
-import click
-import json
-from datetime import datetime, timedelta
-
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import pandas as pd
 import pytz
 
-from .core import pressure_at_elevation, wet_bulb_f
-
-
-def load_weather_data(json_path):
-    """Load standard weather JSON, returning (elevation_ft, times, temps_f, rh_values)."""
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    elevation_ft = data.get("elevation_ft", 0.0)
-    pt_zone = pytz.timezone("America/Los_Angeles")
-
-    times, temps_f, rh_values = [], [], []
-    for obs in data.get("observations", []):
-        dt_obj = datetime.fromisoformat(obs["time_iso"])
-        times.append(dt_obj.astimezone(pt_zone))
-        temps_f.append(obs["air_temp_f"])
-        rh_values.append(obs["relative_humidity_pct"])
-
-    return elevation_ft, times, temps_f, rh_values
+from .plot_utils import (
+    PT_ZONE,
+    compute_segment_integral,
+    export_forecast_csv,
+    find_crossings_and_segments,
+    prepare_forecast_data,
+)
 
 
 def plot_forecast(times, temps_f, adjusted_wbs, elevation_ft, days):
@@ -35,30 +18,12 @@ def plot_forecast(times, temps_f, adjusted_wbs, elevation_ft, days):
     fig, ax = plt.subplots(figsize=(20, 7))
 
     valid_data = [(t, w) for t, w in zip(times, adjusted_wbs) if w is not None]
-    pt_zone = pytz.timezone("America/Los_Angeles")
 
     if valid_data:
         v_times = [d[0] for d in valid_data]
         v_wbs = [d[1] for d in valid_data]
 
-        segments = []
-        current_segment = [(v_times[0], v_wbs[0])]
-        crossing_times = []
-
-        for i in range(len(v_wbs) - 1):
-            t1, w1 = v_times[i], v_wbs[i]
-            t2, w2 = v_times[i + 1], v_wbs[i + 1]
-
-            if (w1 - 32) * (w2 - 32) < 0:
-                ratio = (32 - w1) / (w2 - w1)
-                t_cross = t1 + (t2 - t1) * ratio
-                crossing_times.append(t_cross)
-                current_segment.append((t_cross, 32.0))
-                segments.append(current_segment)
-                current_segment = [(t_cross, 32.0), (t2, w2)]
-            else:
-                current_segment.append((t2, w2))
-        segments.append(current_segment)
+        segments, crossing_times = find_crossings_and_segments(v_times, v_wbs)
 
         trans = ax.get_xaxis_transform()
 
@@ -68,12 +33,7 @@ def plot_forecast(times, temps_f, adjusted_wbs, elevation_ft, days):
             seg_times = [p[0] for p in seg]
             seg_wbs = [p[1] for p in seg]
 
-            integral = 0.0
-            for i in range(len(seg) - 1):
-                dt_hours = (seg_times[i + 1] - seg_times[i]).total_seconds() / 3600.0
-                integral += (
-                    0.5 * abs((seg_wbs[i] - 32) + (seg_wbs[i + 1] - 32)) * dt_hours
-                )
+            integral = compute_segment_integral(seg_times, seg_wbs)
 
             mid_idx = len(seg) // 2
             is_melt = seg_wbs[mid_idx] > 32.0
@@ -120,9 +80,9 @@ def plot_forecast(times, temps_f, adjusted_wbs, elevation_ft, days):
     )
     ax.set_ylabel("Temperature (°F)", fontsize=14)
 
-    ax.xaxis.set_major_locator(mdates.HourLocator(interval=6, tz=pt_zone))
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:00", tz=pt_zone))
-    ax.xaxis.set_minor_locator(mdates.HourLocator(interval=1, tz=pt_zone))
+    ax.xaxis.set_major_locator(mdates.HourLocator(interval=6, tz=PT_ZONE))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:00", tz=PT_ZONE))
+    ax.xaxis.set_minor_locator(mdates.HourLocator(interval=1, tz=PT_ZONE))
     ax.grid(True, which="major", axis="x", color="gray", linestyle="-", alpha=0.6)
     ax.grid(True, which="minor", axis="x", color="gray", linestyle=":", alpha=0.4)
     ax.grid(True, which="major", axis="y", color="gray", linestyle="--", alpha=0.5)
@@ -172,39 +132,7 @@ def plot_forecast(times, temps_f, adjusted_wbs, elevation_ft, days):
 
 def run_plot(json_path, days=3.0):
     """Load weather data, compute wet bulb temps, generate chart and CSV."""
-    elevation_ft, times, temps_f, rh_values = load_weather_data(json_path)
-
-    if not times:
-        raise click.ClickException("No valid time series data found in JSON.")
-
-    p_hpa = pressure_at_elevation(elevation_ft)
-    print(f"Elevation: {elevation_ft} ft. Local pressure: {p_hpa:.2f} hPa")
-
-    start_time = times[0]
-    cutoff_date = start_time + timedelta(days=days)
-
-    f_times, f_temps, f_rhs = [], [], []
-    for t, temp, rh in zip(times, temps_f, rh_values):
-        if t <= cutoff_date:
-            f_times.append(t)
-            f_temps.append(temp)
-            f_rhs.append(rh)
-
-    adjusted_wbs = []
-    for t_f, rh in zip(f_temps, f_rhs):
-        if t_f is not None and rh is not None:
-            t_c = (t_f - 32) * 5.0 / 9.0
-            adjusted_wbs.append(wet_bulb_f(t_c, rh, p_hpa))
-        else:
-            adjusted_wbs.append(None)
+    elevation_ft, f_times, f_temps, f_rhs, adjusted_wbs = prepare_forecast_data(json_path, days)
 
     plot_forecast(f_times, f_temps, adjusted_wbs, elevation_ft, days)
-
-    df = pd.DataFrame({
-        "Time_PT": [t.strftime("%Y-%m-%d %H:%M:%S") for t in f_times],
-        "Air_Temp_F": f_temps,
-        "Relative_Humidity_Pct": f_rhs,
-        "Adjusted_Wet_Bulb_F": adjusted_wbs,
-    })
-    df.to_csv("forecast_data.csv", index=False)
-    print("Data saved to: forecast_data.csv")
+    export_forecast_csv(f_times, f_temps, f_rhs, adjusted_wbs, "forecast_data.csv")
