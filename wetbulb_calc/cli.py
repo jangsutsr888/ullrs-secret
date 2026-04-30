@@ -5,6 +5,7 @@ import click
 from .core import pressure_at_elevation, wet_bulb_f
 from .import_data import write_weather_json
 from .importers import get_registry
+from .consolidation_plot import run_consolidation_model
 from .plot import run_plot
 
 
@@ -28,6 +29,17 @@ def import_cmd():
 def plot(file, days):
     """Read standard JSON, compute wet bulb temps, generate chart and CSV."""
     run_plot(file, days)
+
+
+# --- consolidation-plot command ---
+
+@cli.command("consolidation-plot")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--days", type=float, default=3.0, help="Number of forecast days.")
+@click.option("--snow", type=float, default=20.0, help="Initial new snow depth in cm.")
+def consolidation_plot(file, days, snow):
+    """Compute melt-freeze consolidation model and plot D_total curve."""
+    run_consolidation_model(file, days=days, h0_snow=snow)
 
 
 # --- calc command ---

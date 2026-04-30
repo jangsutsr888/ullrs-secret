@@ -27,10 +27,11 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  calc    One-off wet bulb temperature calculation.
-  import  Import weather data from a source into standard JSON.
-  plot    Read standard JSON, compute wet bulb temps, generate chart and...
-  run     Import data and plot in one step.
+  calc                One-off wet bulb temperature calculation.
+  consolidation-plot  Compute melt-freeze consolidation model and plot...
+  import              Import weather data from a source into standard JSON.
+  plot                Read standard JSON, compute wet bulb temps, generate...
+  run                 Import data and plot in one step.
 ```
 
 ### Import weather data
@@ -108,6 +109,29 @@ Chart saved to: forecast_chart.png
 Data saved to: forecast_data.csv
 ```
 
+### Consolidation model (melt-freeze structural analysis)
+
+```
+$ wetbulb-calc consolidation-plot --help
+Usage: wetbulb-calc consolidation-plot [OPTIONS] FILE
+
+  Compute melt-freeze consolidation model and plot D_total curve.
+
+Options:
+  --days FLOAT  Number of forecast days.
+  --snow FLOAT  Initial new snow depth in cm.
+  --help        Show this message and exit.
+```
+
+```
+$ wetbulb-calc consolidation-plot --days 4.5 --snow 25 weather_data.json
+Elevation: 9167.0 ft. Local pressure: 719.64 hPa
+Chart saved to: d_total_curve.png
+Data saved to: consolidation_forecast_data.csv
+```
+
+This models how melt-freeze cycles structurally consolidate new snow into a supportable corn base. The chart tracks cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable.
+
 ### One-off wet bulb calculation
 
 ```bash
@@ -118,6 +142,8 @@ wetbulb-calc calc --temp 32 --rh 65 --elevation 9000
 
 - `forecast_chart.png` — temperature chart with melt/freeze integrals
 - `forecast_data.csv` — hourly data export
+- `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
+- `consolidation_forecast_data.csv` — consolidation model data export
 
 ## Standard Weather Data Format
 
