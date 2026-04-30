@@ -35,9 +35,12 @@ def load_weather_data(json_path):
 
     return elevation_ft, times, temps_f, rh_values
 
-
-def plot_d_total_curve(times, adjusted_wbs, elevation_ft, days, h0_snow=20.0):
-    """Generate a focused chart showing only the D_total progression."""
+def plot_d_total_curve(times, adjusted_wbs, elevation_ft, days, swe_mm=30.0, h0_snow_cm=20.0):
+    """
+    Generate a focused chart showing the D_total progression.
+    Uses pure physics: calculates density directly from SWE and physical depth to derive 
+    dynamic heat transfer (K_F) and percolation (K_M) coefficients.
+    """
     fig, ax = plt.subplots(figsize=(16, 7))
 
     valid_data = [(t, w) for t, w in zip(times, adjusted_wbs) if w is not None]
@@ -70,9 +73,21 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, days, h0_snow=20.0):
             current_segment.append((t2, w2))
     segments.append(current_segment)
 
-    # --- 2. Calculate Integrals & Thermodynamic Model ---
-    K_M = 0.5
-    K_F = 2.5
+    # --- 2. Calculate Integrals & Dynamic Thermodynamic Model ---
+    
+    # Calculate real physical density (water is 1.0)
+    # SWE (mm) / 10 = SWE (cm). Density = SWE (cm) / Depth (cm)
+    real_density = (swe_mm / 10.0) / h0_snow_cm
+    
+    # Constrain density to realistic snow bounds (5% to 60%)
+    real_density = max(0.05, min(0.60, real_density))
+    
+    # Continuous functions for coefficients based on density
+    # e.g., Density 0.10 (Dry) -> K_M ~0.3, K_F ~1.5
+    # e.g., Density 0.35 (Wet) -> K_M ~0.8, K_F ~4.0
+    K_M = (real_density * 2.0) + 0.1
+    K_F = (real_density * 10.0) + 0.5
+    
     S_SOUTH = 20.0  
 
     current_Im = 0.0 
@@ -151,7 +166,8 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, days, h0_snow=20.0):
     
     ax.fill_between(d_total_times, d_total_values, step="post", color="purple", alpha=0.15, zorder=4)
 
-    support_threshold = min(h0_snow, 15.0)
+    # Update variable name to match new signature
+    support_threshold = min(h0_snow_cm, 15.0)
     ax.axhline(y=support_threshold, color="crimson", linestyle="--", linewidth=2.5, 
                 label=f"Support Threshold ({support_threshold} cm)", zorder=6)
 
@@ -167,7 +183,7 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, days, h0_snow=20.0):
     # --- 4. Formatting & Layout ---
     ax.set_title(
         f"South Aspect Corn Base Consolidation ($D_{{total}}$)\n"
-        f"Initial New Snow: {h0_snow} cm | Elev: {elevation_ft} ft",
+        f"SWE: {swe_mm} mm | Depth: {h0_snow_cm} cm | Density: {real_density*100:.0f}% | Elev: {elevation_ft} ft",
         fontsize=18, fontweight="bold", pad=15
     )
     
@@ -193,12 +209,12 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, days, h0_snow=20.0):
     plt.subplots_adjust(bottom=0.35)
 
     manual_content = (
-        "Thermodynamic Consolidation Model (South Aspect)\n"
+        "Thermodynamic Model [Dynamic Density Engine]\n"
         "----------------------------------------------------------------------------------------------------------------------\n"
-        " * M_eff (Effective Melt) = Daily Melt Integral (°F·h) + South Solar Bonus (20 °F·h)\n"
-        " * D_melt (Percolation) = 0.5 * M_eff   | Water drives settlement & destroys dendrites.\n"
-        " * D_freeze (Refreeze) = 2.5 * sqrt(Nightly Freeze Integral) | Stefan's Law (Non-linear depth diffusion).\n"
-        " * D_cycle = min(D_melt, D_freeze)      | The actual structural gain added at the end of each freeze cycle.\n"
+        f" * Real-time Density: {real_density*100:.1f}% (Derived from {swe_mm} mm SWE and {h0_snow_cm} cm Depth)\n"
+        f" * Dynamic Percolation (K_M) = {K_M:.2f}  | Dynamic Freeze Conductivity (K_F) = {K_F:.2f}\n"
+        " * D_melt = K_M * Effective Melt      | D_freeze = K_F * sqrt(Freeze Integral)\n"
+        " * Degradation Penalties applied for Freeze Failures (If < 30% Im) and Isothermal Overheating (Im > 40).\n"
         "----------------------------------------------------------------------------------------------------------------------\n"
         " Decision Matrix: \n"
         " - Wait until D_total crosses the Support Threshold before committing to steep lines.\n"
@@ -216,9 +232,10 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, days, h0_snow=20.0):
     return fig
 
 
-def run_consolidation_model(json_path, days=3.0, h0_snow=20.0):
+def run_consolidation_model(json_path, days=3.0, swe_mm=30.0, h0_snow_cm=20.0):
     """
     Load weather data, compute wet bulb temps via .core, generate D_total chart and CSV.
+    Passes SWE and physical depth directly to the physics engine.
     """
     elevation_ft, times, temps_f, rh_values = load_weather_data(json_path)
 
@@ -250,7 +267,7 @@ def run_consolidation_model(json_path, days=3.0, h0_snow=20.0):
             adjusted_wbs.append(None)
 
     # 3. Pass the fully computed wet bulb data to the plotting logic
-    plot_d_total_curve(f_times, adjusted_wbs, elevation_ft, days, h0_snow=h0_snow)
+    plot_d_total_curve(f_times, adjusted_wbs, elevation_ft, days, swe_mm=swe_mm, h0_snow_cm=h0_snow_cm)
 
     # 4. Export the data to CSV for verification
     df = pd.DataFrame({

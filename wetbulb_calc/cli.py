@@ -36,10 +36,11 @@ def plot(file, days):
 @cli.command("consolidation-plot")
 @click.argument("file", type=click.Path(exists=True))
 @click.option("--days", type=float, default=3.0, help="Number of forecast days.")
-@click.option("--snow", type=float, default=20.0, help="Initial new snow depth in cm.")
-def consolidation_plot(file, days, snow):
+@click.option("--swe", type=float, default=30.0, help="Snow water equivalent in mm.")
+@click.option("--depth", type=float, default=20.0, help="Physical snow depth in cm.")
+def consolidation_plot(file, days, swe, depth):
     """Compute melt-freeze consolidation model and plot D_total curve."""
-    run_consolidation_model(file, days=days, h0_snow=snow)
+    run_consolidation_model(file, days=days, swe_mm=swe, h0_snow_cm=depth)
 
 
 # --- calc command ---

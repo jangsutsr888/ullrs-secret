@@ -118,19 +118,20 @@ Usage: wetbulb-calc consolidation-plot [OPTIONS] FILE
   Compute melt-freeze consolidation model and plot D_total curve.
 
 Options:
-  --days FLOAT  Number of forecast days.
-  --snow FLOAT  Initial new snow depth in cm.
-  --help        Show this message and exit.
+  --days FLOAT   Number of forecast days.
+  --swe FLOAT    Snow water equivalent in mm.
+  --depth FLOAT  Physical snow depth in cm.
+  --help         Show this message and exit.
 ```
 
 ```
-$ wetbulb-calc consolidation-plot --days 4.5 --snow 25 weather_data.json
+$ wetbulb-calc consolidation-plot --days 4.5 --swe 40 --depth 25 weather_data.json
 Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: d_total_curve.png
 Data saved to: consolidation_forecast_data.csv
 ```
 
-This models how melt-freeze cycles structurally consolidate new snow into a supportable corn base. The chart tracks cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable.
+This models how melt-freeze cycles structurally consolidate new snow into a supportable corn base. Snow density is derived from SWE and physical depth, which drives dynamic heat transfer and percolation coefficients. The chart tracks cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable. Degradation penalties apply for insufficient overnight refreezes and isothermal overheating.
 
 ### One-off wet bulb calculation
 
