@@ -1,8 +1,7 @@
 """Read standard weather JSON, compute wet bulb temperatures, plot and export."""
 
-import argparse
+import click
 import json
-import sys
 from datetime import datetime, timedelta
 
 import matplotlib.dates as mdates
@@ -171,26 +170,18 @@ def plot_forecast(times, temps_f, adjusted_wbs, elevation_ft, days):
     return fig
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="根据标准天气 JSON 数据计算并绘制修正海拔后的湿球温度。"
-    )
-    parser.add_argument("json_path", type=str, help="输入的 weather JSON 文件路径")
-    parser.add_argument("--days", type=float, default=3.0,
-                        help="需要绘制的天数 (默认: 3 天)")
-    args = parser.parse_args()
-
-    elevation_ft, times, temps_f, rh_values = load_weather_data(args.json_path)
+def run_plot(json_path, days=3.0):
+    """Load weather data, compute wet bulb temps, generate chart and CSV."""
+    elevation_ft, times, temps_f, rh_values = load_weather_data(json_path)
 
     if not times:
-        print("错误: 在 JSON 中未找到有效的时间序列数据。")
-        sys.exit(1)
+        raise click.ClickException("No valid time series data found in JSON.")
 
     p_hpa = pressure_at_elevation(elevation_ft)
-    print(f"检测到海拔: {elevation_ft} ft. 计算所得当地标准气压: {p_hpa:.2f} hPa")
+    print(f"Elevation: {elevation_ft} ft. Local pressure: {p_hpa:.2f} hPa")
 
     start_time = times[0]
-    cutoff_date = start_time + timedelta(days=args.days)
+    cutoff_date = start_time + timedelta(days=days)
 
     f_times, f_temps, f_rhs = [], [], []
     for t, temp, rh in zip(times, temps_f, rh_values):
@@ -207,7 +198,7 @@ def main():
         else:
             adjusted_wbs.append(None)
 
-    plot_forecast(f_times, f_temps, adjusted_wbs, elevation_ft, args.days)
+    plot_forecast(f_times, f_temps, adjusted_wbs, elevation_ft, days)
 
     df = pd.DataFrame({
         "Time_PT": [t.strftime("%Y-%m-%d %H:%M:%S") for t in f_times],
@@ -216,8 +207,4 @@ def main():
         "Adjusted_Wet_Bulb_F": adjusted_wbs,
     })
     df.to_csv("forecast_data.csv", index=False)
-    print("数据已成功保存为: forecast_data.csv")
-
-
-if __name__ == "__main__":
-    main()
+    print("Data saved to: forecast_data.csv")
