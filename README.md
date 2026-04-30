@@ -1,6 +1,6 @@
 # Wet Bulb Temperature Calculator
 
-Calculates altitude-adjusted wet bulb temperature from weather forecast data for backcountry ski conditions assessment. Supports NWS (weather.gov XML) data source.
+Calculates altitude-adjusted wet bulb temperature from weather forecast data for backcountry ski conditions assessment.
 
 ## Install
 
@@ -8,24 +8,42 @@ Calculates altitude-adjusted wet bulb temperature from weather forecast data for
 pip install -e .
 ```
 
-## Usage
+## Commands
 
-### Quick start (auto-detect source)
+### Import weather data
+
+Fetch forecast data from a source and save as standardized JSON.
 
 ```bash
-./scripts/run.sh "https://forecast.weather.gov/..." 3
+wetbulb-calc import nws <url_or_file> -o weather_data.json
 ```
 
-### Direct commands
+### Generate forecast chart
+
+Read the JSON, compute wet bulb temps, and produce a chart and CSV.
 
 ```bash
-wetbulb-nws downloaded_weather.xml --days 3
+wetbulb-calc plot weather_data.json --days 3
 ```
 
-### Makefile
+### Import and plot in one step
 
 ```bash
-make run-nws FILE=downloaded_weather.xml DAYS=3
+wetbulb-calc run nws <url_or_file> --days 3
+```
+
+### One-off wet bulb calculation
+
+```bash
+wetbulb-calc calc --temp 32 --rh 65 --elevation 9000
+```
+
+### Help
+
+```bash
+wetbulb-calc --help
+wetbulb-calc import --help
+wetbulb-calc import nws --help
 ```
 
 ## Output
@@ -37,10 +55,10 @@ make run-nws FILE=downloaded_weather.xml DAYS=3
 
 | Condition | Threshold |
 |-----------|-----------|
-| Top tier powder | WBTDH 0–5 F-hrs |
-| Critical degradation | WBTDH 15–20 F-hrs |
+| Top tier powder | WBTDH 0-5 F-hrs |
+| Critical degradation | WBTDH 15-20 F-hrs |
 | Isothermal (ruined) | WBTDH > 35 F-hrs |
 | Freeze failure (unsafe) | Night WBFDH < 10 F-hrs |
 | Full reset | Night WBFDH > 50 F-hrs |
 
-WBTDH = Melt Integral (T > 32°F), WBFDH = Freeze Integral (T < 32°F)
+WBTDH = Melt Integral (T > 32 F), WBFDH = Freeze Integral (T < 32 F)
