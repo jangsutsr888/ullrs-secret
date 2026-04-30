@@ -1,4 +1,4 @@
-.PHONY: install dev clean
+.PHONY: install clean
 
 VENV := venv
 PYTHON := $(VENV)/bin/python
@@ -10,9 +10,6 @@ venv:
 
 install: venv
 	$(PIP) install -e .
-
-dev: venv
-	$(PYTHON) setup.py develop
 
 clean:
 	rm -rf $(VENV) build/ dist/ *.egg-info

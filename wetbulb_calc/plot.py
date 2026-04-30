@@ -166,7 +166,7 @@ def plot_forecast(times, temps_f, adjusted_wbs, elevation_ft, days):
     )
 
     plt.savefig("forecast_chart.png", dpi=150, bbox_inches="tight")
-    print(f"图表已成功保存为: forecast_chart.png")
+    print(f"Chart saved to: forecast_chart.png")
     return fig
 
 
