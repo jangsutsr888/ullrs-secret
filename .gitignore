@@ -1,0 +1,12 @@
+__pycache__/
+*.egg-info/
+dist/
+build/
+venv/
+*.pyc
+downloaded_data.tmp
+weather_data.json
+*.png
+*.csv
+downloaded_weather.xml
+/docs/*
