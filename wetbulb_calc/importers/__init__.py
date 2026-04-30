@@ -20,11 +20,11 @@ standard dict format::
 _REGISTRY = {}
 
 
-def register(name):
-    def decorator(fn):
-        _REGISTRY[name] = fn
+def register(name, decorators):
+    def wrapper(fn):
+        _REGISTRY[name] = {"fetch": fn, "decorators": decorators}
         return fn
-    return decorator
+    return wrapper
 
 
 def get_importer(name):
@@ -36,6 +36,10 @@ def get_importer(name):
 
 def list_importers():
     return sorted(_REGISTRY)
+
+
+def get_registry():
+    return dict(_REGISTRY)
 
 
 from . import nws  # noqa: E402, F401

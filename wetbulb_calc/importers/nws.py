@@ -1,24 +1,12 @@
 """NWS XML data importer."""
 
-import sys
+import os
 import urllib.request
 import xml.etree.ElementTree as ET
 
+import click
+
 from . import register
-
-
-@register("nws")
-def fetch(source):
-    """Fetch and parse NWS weather data from a URL or local XML file path.
-
-    Returns a dict in the standard weather data format.
-    """
-    if source.startswith(("http://", "https://")):
-        xml_data = _download(source)
-    else:
-        xml_data = _read_local(source)
-
-    return _parse_xml(xml_data)
 
 
 def _download(url):
@@ -29,15 +17,12 @@ def _download(url):
         with urllib.request.urlopen(req) as resp:
             return resp.read().decode("utf-8")
     except Exception as e:
-        print(f"下载失败: {e}")
-        sys.exit(1)
+        raise click.ClickException(f"Download failed: {e}")
 
 
 def _read_local(path):
-    import os
     if not os.path.exists(path):
-        print(f"错误: 找不到文件 {path}")
-        sys.exit(1)
+        raise click.ClickException(f"File not found: {path}")
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
@@ -49,8 +34,7 @@ def _parse_xml(xml_data):
     try:
         root = ET.fromstring(xml_data)
     except ET.ParseError as e:
-        print(f"XML 解析失败: {e}")
-        sys.exit(1)
+        raise click.ClickException(f"XML parse failed: {e}")
 
     height_elem = root.find(".//location/height")
     elevation_ft = float(height_elem.text) if height_elem is not None else 0.0
@@ -91,3 +75,18 @@ def _parse_xml(xml_data):
         "elevation_ft": elevation_ft,
         "observations": observations,
     }
+
+
+NWS_DECORATORS = [
+    click.argument("source"),
+]
+
+
+@register("nws", decorators=NWS_DECORATORS)
+def fetch(source):
+    """Fetch and parse NWS weather data from a URL or local XML file path."""
+    if source.startswith(("http://", "https://")):
+        xml_data = _download(source)
+    else:
+        xml_data = _read_local(source)
+    return _parse_xml(xml_data)
