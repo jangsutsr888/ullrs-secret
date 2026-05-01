@@ -108,27 +108,35 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
     plt.tight_layout()
 
     current_size = fig.get_size_inches()
-    fig.set_size_inches(current_size[0], current_size[1] + 4.5)
-    plt.subplots_adjust(bottom=0.45)
+    fig.set_size_inches(current_size[0], current_size[1] + 6)
+    plt.subplots_adjust(bottom=0.52)
     ax.legend(loc="upper left", bbox_to_anchor=(0, -0.25), fontsize=12, frameon=True)
 
     manual_content = (
-        "Effective Temperature Reference Manual\n"
+        "Effective Temperature Reference Manual (Universal Radiative Model)\n"
         "----------------------------------------------------------------------------------------------------------------------\n"
-        "  Effective Temp = Wet Bulb + Shortwave Radiative Equiv + Longwave Radiative Equiv\n"
-        "  Accounts for solar heating (aspect/cloud) and longwave radiation in addition to wet bulb.\n"
+        "  Effective Temp = Wet Bulb + Shortwave Radiative Equiv (+T) + Longwave Radiative Equiv (-T)\n"
+        "  * NOTE: This model explicitly calculates slope/aspect. Thresholds below apply universally to ANY slope.\n"
         "----------------------------------------------------------------------------------------------------------------------\n"
-        "[North Aspect Powder]                                   [South Aspect Corn Cycle]\n"
-        " * Top Tier: ETDH 0 ~ 5 F-hrs                            * Target: Snow Depth(inch) x K (PNW K=3, Rockies K=5)\n"
-        " * Critical: ETDH 15 ~ 20 F-hrs                          * Prime Corn: Current Day ETDH 0 ~ 3 F-hrs\n"
-        " * Isothermal (Ruined): ETDH > 35 F-hrs                  * Sticky/Grabby Warning: Current Day ETDH 5 ~ 8 F-hrs\n"
+        "[Phase 1: Powder Preservation (Dry Snow)]\n"
+        " * Pristine Powder (Daily): Daily ETDH < 15 F-hrs. (Minimal energy to maintain crystal structure)\n"
+        " * Powder Recovery Check (Nightly): \n"
+        "    - Must meet EFDH > 30 F-hrs AND EFDH > 0.8 * Prev_Day_ETDH to prevent settlement.\n"
+        " * Settlement / Getting Heavy: Daily ETDH 20 ~ 40 F-hrs. (Snow begins to round and densify)\n"
         "----------------------------------------------------------------------------------------------------------------------\n"
-        "[Overnight Recovery & Safety]                           [Reset Protocol (Isothermal State)]\n"
-        " * Freeze Failure: Night EFDH < 10 F-hrs (Unsafe)        * False Recovery: Night EFDH < 20 F-hrs (Breakable crust)\n"
-        " * Energy Deficit: EFDH < 0.5 * ETDH (Deteriorating)     * Initial Stabilization: Night EFDH 30 ~ 40 F-hrs\n"
-        "                                                         * Full Reset: Night EFDH > 50 F-hrs (Structure restored)\n"
+        "[Phase 2: The Corn Cycle (Melt-Freeze)]\n"
+        " * Crust Break-through: Daily ETDH 40 ~ 60 F-hrs. (DANGEROUS: Weak surface, 'breakable' crust, high ACL risk)\n"
+        " * PRIME CORN WINDOW: Daily ETDH 60 ~ 90 F-hrs. (Perfect 2-3cm soft surface over supportable base)\n"
+        " * Sticky/Grabby (Overcooked): Daily ETDH 100 ~ 130 F-hrs. (Deep melt, suction effect, high drag)\n"
         "----------------------------------------------------------------------------------------------------------------------\n"
-        "Note: ETDH = Effective Temp Melt Integral (T > 32 F)  |  EFDH = Effective Temp Freeze Integral (T < 32 F)"
+        "[Phase 3: Danger & Reset Protocol (Isothermal/Wet)]\n"
+        " * Wet Avalanche Warning: Daily ETDH > 150 F-hrs. (Water percolating deep into snowpack)\n"
+        " * Overnight Reset Requirements (to clear heat debt):\n"
+        "    - Poor Reset (Supportable? No): Night EFDH < 60 F-hrs. (Surface may refreeze, but base remains unstable)\n"
+        "    - Full Reset (Structure Restored): Night EFDH 100 ~ 150 F-hrs.\n"
+        "    - Energy Deficit Alert: Night EFDH must be >= 0.7 * Previous Day ETDH for slope stabilization.\n"
+        "----------------------------------------------------------------------------------------------------------------------\n"
+        "Note: ETDH = Melt Integral (T_eff > 32 F)  |  EFDH = Freeze Integral (T_eff < 32 F, absolute value)\n"
     )
 
     fig.text(
