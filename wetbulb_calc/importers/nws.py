@@ -27,6 +27,18 @@ def _read_local(path):
         return f.read()
 
 
+def _extract_values(parent, tag, attr_type, layout_key):
+    for elem in parent.findall(tag):
+        if elem.get("type") == attr_type and elem.get("time-layout") == layout_key:
+            return [
+                float(v.text) if v.text is not None and not v.get(
+                    "{http://www.w3.org/2001/XMLSchema-instance}nil"
+                ) else None
+                for v in elem.findall("value")
+            ]
+    return []
+
+
 def _parse_xml(xml_data):
     xml_data = xml_data.replace("&lon=", "&amp;lon=").replace(
         "&FcstType=", "&amp;FcstType="
@@ -35,6 +47,10 @@ def _parse_xml(xml_data):
         root = ET.fromstring(xml_data)
     except ET.ParseError as e:
         raise click.ClickException(f"XML parse failed: {e}")
+
+    point_elem = root.find(".//location/point")
+    latitude = float(point_elem.get("latitude")) if point_elem is not None else None
+    longitude = float(point_elem.get("longitude")) if point_elem is not None else None
 
     height_elem = root.find(".//location/height")
     elevation_ft = float(height_elem.text) if height_elem is not None else 0.0
@@ -47,31 +63,28 @@ def _parse_xml(xml_data):
                 times.append(st.text)
             break
 
-    temps_f = []
-    for temp in root.findall(".//parameters/temperature"):
-        if temp.get("type") == "hourly" and temp.get("time-layout") == time_layout_key:
-            for v in temp.findall("value"):
-                temps_f.append(float(v.text) if v.text is not None else None)
-            break
-
-    rh_values = []
-    for rh in root.findall(".//parameters/humidity"):
-        if rh.get("type") == "relative" and rh.get("time-layout") == time_layout_key:
-            for v in rh.findall("value"):
-                rh_values.append(float(v.text) if v.text is not None else None)
-            break
+    params = root.find(".//parameters")
+    temps_f = _extract_values(params, "temperature", "hourly", time_layout_key)
+    dew_points_f = _extract_values(params, "temperature", "dew point", time_layout_key)
+    rh_values = _extract_values(params, "humidity", "relative", time_layout_key)
+    cloud_cover_pct = _extract_values(params, "cloud-amount", "total", time_layout_key)
 
     min_len = min(len(times), len(temps_f), len(rh_values))
     observations = []
     for i in range(min_len):
-        observations.append({
+        obs = {
             "time_iso": times[i],
             "air_temp_f": temps_f[i],
             "relative_humidity_pct": rh_values[i],
-        })
+            "dew_point_f": dew_points_f[i] if i < len(dew_points_f) else None,
+            "cloud_cover_pct": cloud_cover_pct[i] if i < len(cloud_cover_pct) else None,
+        }
+        observations.append(obs)
 
     return {
         "source": "nws",
+        "latitude": latitude,
+        "longitude": longitude,
         "elevation_ft": elevation_ft,
         "observations": observations,
     }
