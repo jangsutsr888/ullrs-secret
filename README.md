@@ -4,6 +4,8 @@ Calculates altitude-adjusted wet bulb temperature from weather forecast data for
 
 Ask AI this question to start with: What is Wet Bulb Temprature, and what it means for powder preservation & corn formation.
 
+Core calculation references: [English](core_calc_en.pdf) | [中文](core_calc_cn.pdf)
+
 ## Prerequisite
 
 py3.10+ (only tested in py3.10)
