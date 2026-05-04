@@ -49,12 +49,9 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  calc                One-off wet bulb temperature calculation.
   consolidation-plot  Compute melt-freeze consolidation model and plot...
   effective-plot      Read standard JSON, compute effective temps,...
   import              Import weather data from a source into standard JSON.
-  plot                Read standard JSON, compute wet bulb temps, generate...
-  run                 Import data and plot in one step.
 ```
 
 ### Import weather data
@@ -89,48 +86,56 @@ $ wetbulb-calc import nws "https://forecast.weather.gov/MapClick.php?lat=45.3668
 Wrote 168 observations to weather_data.json
 ```
 
-### Generate forecast chart
+### Effective temperature forecast (primary command)
+
+The main output of this tool. Computes Total Effective Temperature — the actual thermal energy hitting the snow surface — by combining wet bulb temperature with shortwave (solar) and longwave (atmospheric) radiative fluxes. This is the temperature the snowpack "feels," not what the thermometer reads.
 
 ```
-$ wetbulb-calc plot --help
-Usage: wetbulb-calc plot [OPTIONS] FILE
+$ wetbulb-calc effective-plot --help
+Usage: wetbulb-calc effective-plot [OPTIONS] FILE
 
-  Read standard JSON, compute wet bulb temps, generate chart and CSV.
+  Read standard JSON, compute effective temps, generate chart and CSV.
 
 Options:
-  --days FLOAT  Number of forecast days.
-  --help        Show this message and exit.
+  --days FLOAT    Number of forecast days.
+  --slope FLOAT   Slope angle in degrees (0 = flat).
+  --aspect FLOAT  Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).
+  --help          Show this message and exit.
 ```
 
 ```
-$ wetbulb-calc plot --days 4.5 weather_data.json
+# Flat terrain (default) — good baseline for open bowls
+$ wetbulb-calc effective-plot --days 4.5 weather_data.json
 Elevation: 9167.0 ft. Local pressure: 719.64 hPa
-Chart saved to: forecast_chart.png
-Data saved to: forecast_data.csv
+Chart saved to: effective_temp_chart.png
+Data saved to: effective_temp_data.csv
+
+# Southeast-facing 35° slope — typical steep corn line
+$ wetbulb-calc effective-plot --days 4.5 --slope 35 --aspect 135 weather_data.json
+Elevation: 9167.0 ft. Local pressure: 719.64 hPa
+Chart saved to: effective_temp_chart.png
+Data saved to: effective_temp_data.csv
 ```
 
-### Import and plot in one step
+The chart plots effective temperature as the primary curve with wet bulb as overlay, annotates each melt/freeze segment with its integral (F-hrs), and highlights the Prime Corn Window (60–90 F-hrs cumulative melt) in green. A built-in reference manual below the chart maps integral values to snow conditions:
 
-```
-$ wetbulb-calc run nws --help
-Usage: wetbulb-calc run nws [OPTIONS] SOURCE
+| Effective Melt Integral (ETDH) | Snow State |
+|-------------------------------|------------|
+| < 15 F-hrs | Pristine powder preserved |
+| 20–40 F-hrs | Settlement, getting heavy |
+| 40–60 F-hrs | Crust break-through (dangerous, high ACL risk) |
+| **60–90 F-hrs** | **Prime corn window** |
+| 100–130 F-hrs | Sticky/grabby, overcooked |
+| > 150 F-hrs | Wet avalanche warning |
 
-  Import from nws and plot.
+Overnight refreeze (EFDH) must reach at least 0.7× the previous day's melt integral for slope stabilization. Full structural reset requires 100–150 F-hrs of freeze.
 
-Options:
-  -o, --output TEXT  Output JSON path.
-  --days FLOAT       Number of forecast days.
-  --help             Show this message and exit.
-```
+**Slope & aspect matter.** A 35° south-facing slope receives dramatically more solar energy than a flat surface or north-facing slope at the same elevation. Always match `--slope` and `--aspect` to the line you intend to ski — the corn window timing can shift by hours between aspects.
 
-```
-# Weather data of Nisqually Glacier of Mt Rainier
-$ wetbulb-calc run nws --days 3 "https://forecast.weather.gov/MapClick.php?lat=46.829&lon=-121.7431&FcstType=digitalDWML"
-Wrote 168 observations to weather_data.json
-Elevation: 9485.0 ft. Local pressure: 710.86 hPa
-Chart saved to: forecast_chart.png
-Data saved to: forecast_data.csv
-```
+Example outputs:
+
+![Inter Glacier, Mt Rainier](example/inter-glacier-5-4-2026.png)
+![Wy'East face, Mt Hood](example/wy-east-5-4-2026.png)
 
 ### Consolidation model (melt-freeze structural analysis)
 
@@ -156,51 +161,14 @@ Data saved to: consolidation_forecast_data.csv
 
 This models how melt-freeze cycles structurally consolidate new snow into a supportable corn base. Snow density is derived from SWE and physical depth, which drives dynamic heat transfer and percolation coefficients. The chart tracks cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable. Degradation penalties apply for insufficient overnight refreezes and isothermal overheating.
 
-### Effective temperature chart (radiative-adjusted)
-
-```
-$ wetbulb-calc effective-plot --help
-Usage: wetbulb-calc effective-plot [OPTIONS] FILE
-
-  Read standard JSON, compute effective temps, generate chart and CSV.
-
-Options:
-  --days FLOAT    Number of forecast days.
-  --slope FLOAT   Slope angle in degrees (0 = flat).
-  --aspect FLOAT  Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).
-  --help          Show this message and exit.
-```
-
-```
-# Flat terrain (default)
-$ wetbulb-calc effective-plot --days 4.5 weather_data.json
-Elevation: 9167.0 ft. Local pressure: 719.64 hPa
-Chart saved to: effective_temp_chart.png
-Data saved to: effective_temp_data.csv
-
-# Southeast-facing 35° slope
-$ wetbulb-calc effective-plot --days 4.5 --slope 35 --aspect 135 weather_data.json
-Elevation: 9167.0 ft. Local pressure: 719.64 hPa
-Chart saved to: effective_temp_chart.png
-Data saved to: effective_temp_data.csv
-```
-
-This computes the Total Effective Temperature, which combines wet bulb temperature with shortwave and longwave radiative effects. The effective temperature accounts for solar heating (based on latitude, longitude, time-of-day, and cloud cover) and longwave radiation exchange between the atmosphere and snowpack. Slope angle and aspect control how direct sunlight hits the surface — a steep south-facing slope receives far more solar energy than a flat or north-facing one, shifting the effective temperature significantly. In the chart, effective temperature is the primary curve and wet bulb temperature serves as the overlay — similar to how the standard `plot` command shows wet bulb as primary and air temperature as overlay. Location (lat/lon), slope, and aspect are displayed in the chart title.
-
-### One-off wet bulb calculation
-
-```bash
-wetbulb-calc calc --temp 32 --rh 65 --elevation 9000
-```
+**TODO:** This plot currently uses wet bulb temperature for its melt/freeze cycle detection. It needs to be updated to use effective temperature (incorporating shortwave and longwave radiation data) for consistency with the radiative model.
 
 ## Output
 
-- `forecast_chart.png` — temperature chart with melt/freeze integrals
-- `forecast_data.csv` — hourly data export
+- `effective_temp_chart.png` — effective temperature forecast with melt/freeze integrals and corn window (from `effective-plot`)
+- `effective_temp_data.csv` — hourly data export with wet bulb and effective temp columns
 - `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
 - `consolidation_forecast_data.csv` — consolidation model data export
-- `effective_temp_chart.png` — effective temperature chart with radiative adjustments (from `effective-plot`)
-- `effective_temp_data.csv` — effective temperature data export (includes both wet bulb and effective temp columns)
 
 ## Standard Weather Data Format
 
@@ -290,4 +258,4 @@ from . import nws  # noqa: E402, F401
 from . import spotwx  # noqa: E402, F401
 ```
 
-That's it. Your importer automatically appears under both `wetbulb-calc import spotwx` and `wetbulb-calc run spotwx`.
+That's it. Your importer automatically appears under `wetbulb-calc import spotwx`.
