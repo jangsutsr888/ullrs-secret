@@ -12,6 +12,11 @@ from .plot_utils import (
     prepare_effective_temp_data,
 )
 
+# Prime corn snow window: cumulative melt integral (F-hrs) within a single melt
+# portion where the surface is soft enough to ski but still has a supportable base.
+CORN_WINDOW_MIN_FHRS = 60.0
+CORN_WINDOW_MAX_FHRS = 90.0
+
 
 def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, lat, lon, days,
                            slope_deg=0.0, aspect_deg=180.0):
@@ -27,6 +32,8 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
         segments, crossing_times = find_crossings_and_segments(v_times, v_eff)
 
         trans = ax.get_xaxis_transform()
+
+        corn_zones = []
 
         for seg in segments:
             if len(seg) < 2:
@@ -63,6 +70,49 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
                         bbox=dict(facecolor="white", alpha=0.6, edgecolor="none", pad=2),
                         zorder=6,
                     )
+
+            if is_melt and integral >= CORN_WINDOW_MIN_FHRS:
+                cumulative_melt = 0.0
+                zone_times = []
+                zone_vals = []
+
+                for i in range(len(seg_times) - 1):
+                    dt_hours = (seg_times[i + 1] - seg_times[i]).total_seconds() / 3600.0
+                    incr = 0.5 * ((seg_vals[i] - 32.0) + (seg_vals[i + 1] - 32.0)) * dt_hours
+                    prev_cum = cumulative_melt
+                    cumulative_melt += incr
+
+                    if prev_cum < CORN_WINDOW_MIN_FHRS and cumulative_melt >= CORN_WINDOW_MIN_FHRS:
+                        frac = (CORN_WINDOW_MIN_FHRS - prev_cum) / incr if incr > 0 else 0
+                        t_cross = seg_times[i] + (seg_times[i + 1] - seg_times[i]) * frac
+                        v_cross = seg_vals[i] + (seg_vals[i + 1] - seg_vals[i]) * frac
+                        zone_times.append(t_cross)
+                        zone_vals.append(v_cross)
+
+                    if cumulative_melt >= CORN_WINDOW_MAX_FHRS:
+                        frac = (CORN_WINDOW_MAX_FHRS - prev_cum) / incr if incr > 0 else 0
+                        t_cross = seg_times[i] + (seg_times[i + 1] - seg_times[i]) * frac
+                        v_cross = seg_vals[i] + (seg_vals[i + 1] - seg_vals[i]) * frac
+                        zone_times.append(t_cross)
+                        zone_vals.append(v_cross)
+                        break
+
+                    if cumulative_melt >= CORN_WINDOW_MIN_FHRS:
+                        zone_times.append(seg_times[i + 1])
+                        zone_vals.append(seg_vals[i + 1])
+
+                if cumulative_melt < CORN_WINDOW_MAX_FHRS and len(zone_times) >= 2:
+                    zone_times.append(seg_times[-1])
+                    zone_vals.append(seg_vals[-1])
+
+                if len(zone_times) >= 2:
+                    corn_zones.append((zone_times, zone_vals))
+
+        for idx, (zone_t, zone_v) in enumerate(corn_zones):
+            ax.fill_between(
+                zone_t, zone_v, 32, color="green", alpha=0.3, zorder=2,
+                label=f"Prime Corn Window ({CORN_WINDOW_MIN_FHRS:.0f}-{CORN_WINDOW_MAX_FHRS:.0f} F-hrs)" if idx == 0 else None,
+            )
 
         for ct in crossing_times:
             ax.axvline(x=ct, color="gray", linestyle="-.", alpha=0.8, linewidth=1.5, zorder=2)

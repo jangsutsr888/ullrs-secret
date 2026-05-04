@@ -7,6 +7,7 @@ venv/
 downloaded_data.tmp
 weather_data.json
 *.png
+!example/*.png
 *.csv
 downloaded_weather.xml
 /docs/*
