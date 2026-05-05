@@ -1,8 +1,6 @@
 # Ullr's Secret
 
-Calculates altitude-adjusted wet bulb temperature from weather forecast data for backcountry ski conditions assessment.
-
-Ask AI this question to start with: What is Wet Bulb Temprature, and what it means for powder preservation & corn formation.
+Use weather data to forecast snow quality for backcountry skiing.
 
 Core calculation references: [English](core_calc_en.pdf) | [中文](core_calc_cn.pdf)
 
