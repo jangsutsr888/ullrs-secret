@@ -50,7 +50,7 @@ Options:
 
 Commands:
   consolidation-plot  Compute melt-freeze consolidation model and plot...
-  effective-plot      Read standard JSON, compute effective temps,...
+  plot                Read standard JSON, compute effective temps,...
   import              Import weather data from a source into standard JSON.
 ```
 
@@ -91,8 +91,8 @@ Wrote 168 observations to weather_data.json
 The main output of this tool. Computes Total Effective Temperature — the actual thermal energy hitting the snow surface — by combining wet bulb temperature with shortwave (solar) and longwave (atmospheric) radiative fluxes. This is the temperature the snowpack "feels," not what the thermometer reads.
 
 ```
-$ wetbulb-calc effective-plot --help
-Usage: wetbulb-calc effective-plot [OPTIONS] FILE
+$ wetbulb-calc plot --help
+Usage: wetbulb-calc plot [OPTIONS] FILE
 
   Read standard JSON, compute effective temps, generate chart and CSV.
 
@@ -106,19 +106,19 @@ Options:
 
 ```
 # Flat terrain (default) — good baseline for open bowls
-$ wetbulb-calc effective-plot --days 4.5 weather_data.json
+$ wetbulb-calc plot --days 4.5 weather_data.json
 Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: effective_temp_chart.png
 Data saved to: effective_temp_data.csv
 
 # Southeast-facing 35° slope — typical steep corn line
-$ wetbulb-calc effective-plot --days 4.5 --slope 35 --aspect 135 weather_data.json
+$ wetbulb-calc plot --days 4.5 --slope 35 --aspect 135 weather_data.json
 Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: effective_temp_chart.png
 Data saved to: effective_temp_data.csv
 
 # Adjust forecast to a higher elevation (data source at 9167 ft, target at 10500 ft)
-$ wetbulb-calc effective-plot --days 4.5 --elevation 10500 weather_data.json
+$ wetbulb-calc plot --days 4.5 --elevation 10500 weather_data.json
 Data adjusted from 9167.0 ft to target elevation: 10500.0 ft.
 Working Elevation: 10500.0 ft. Local pressure: 690.38 hPa
 Chart saved to: effective_temp_chart.png
@@ -175,7 +175,7 @@ This models how melt-freeze cycles structurally consolidate new snow into a supp
 
 ## Output
 
-- `effective_temp_chart.png` — effective temperature forecast with melt/freeze integrals and corn window (from `effective-plot`)
+- `effective_temp_chart.png` — effective temperature forecast with melt/freeze integrals and corn window (from `plot`)
 - `effective_temp_data.csv` — hourly data export with wet bulb and effective temp columns
 - `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
 - `consolidation_forecast_data.csv` — consolidation model data export
