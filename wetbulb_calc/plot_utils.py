@@ -1,5 +1,5 @@
 """Shared helpers for forecast and consolidation plot modules."""
-
+import math
 import json
 from datetime import datetime, timedelta
 
@@ -127,13 +127,40 @@ def export_forecast_csv(f_times, f_temps, f_rhs, adjusted_wbs, filename, effecti
     print(f"Data saved to: {filename}")
 
 
-def prepare_effective_temp_data(json_path, days, slope_deg=0.0, aspect_deg=180.0):
-    """Load weather JSON, compute wet bulb and effective temperatures.
+# ==========================================
+# Helper Functions: RH <-> Dew Point Conversions (Magnus-Tetens)
+# ==========================================
+def _get_dew_point_from_rh(temp_f, rh):
+    """Calculate dew point from temperature and relative humidity."""
+    if temp_f is None or rh is None:
+        return None
+    t_c = (temp_f - 32) * 5.0 / 9.0
+    es = 6.112 * math.exp((17.67 * t_c) / (t_c + 243.5))
+    e = es * (rh / 100.0)
+    if e <= 0:
+        return None
+    ln_e = math.log(e / 6.112)
+    td_c = (243.5 * ln_e) / (17.67 - ln_e)
+    return td_c * 9.0 / 5.0 + 32.0
+
+def _get_rh_from_dew_point(temp_f, dew_point_f):
+    """Calculate relative humidity from temperature and dew point."""
+    if temp_f is None or dew_point_f is None:
+        return None
+    t_c = (temp_f - 32) * 5.0 / 9.0
+    td_c = (dew_point_f - 32) * 5.0 / 9.0
+    es = 6.112 * math.exp((17.67 * t_c) / (t_c + 243.5))
+    e = 6.112 * math.exp((17.67 * td_c) / (td_c + 243.5))
+    rh = (e / es) * 100.0
+    return max(0.0, min(100.0, rh))
+
+def prepare_effective_temp_data(json_path, days, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None):
+    """Load weather JSON, optionally adjust to a new elevation, and compute temperatures.
 
     Returns (elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps).
     """
     wd = load_weather_data(json_path)
-    elevation_ft = wd["elevation_ft"]
+    base_elevation_ft = wd["elevation_ft"]
     times = wd["times"]
     temps_f = wd["temps_f"]
     rh_values = wd["rh_values"]
@@ -145,11 +172,8 @@ def prepare_effective_temp_data(json_path, days, slope_deg=0.0, aspect_deg=180.0
     if not times:
         raise click.ClickException("No valid time series data found in JSON.")
 
-    p_hpa = pressure_at_elevation(elevation_ft)
-    print(f"Elevation: {elevation_ft} ft. Local pressure: {p_hpa:.2f} hPa")
-
+    # 1. Filter by time window
     cutoff_date = times[0] + timedelta(days=days)
-
     f_times, f_temps, f_rhs, f_dew, f_cloud = [], [], [], [], []
     for t, temp, rh, dew, cloud in zip(times, temps_f, rh_values, dew_points_f, cloud_cover_pct):
         if t <= cutoff_date:
@@ -159,6 +183,45 @@ def prepare_effective_temp_data(json_path, days, slope_deg=0.0, aspect_deg=180.0
             f_dew.append(dew)
             f_cloud.append(cloud)
 
+    # 2. Elevation Adjustment Logic
+    current_elevation_ft = base_elevation_ft
+    
+    if target_elevation_ft is not None and target_elevation_ft != base_elevation_ft:
+        delta_h = target_elevation_ft - base_elevation_ft
+        t_lapse = 3.56 / 1000.0  # Temp lapse rate: F per 1000 ft
+        td_lapse = 1.0 / 1000.0  # Dew point lapse rate: F per 1000 ft
+        
+        for i in range(len(f_temps)):
+            t_f = f_temps[i]
+            rh = f_rhs[i]
+            
+            # Fallback: compute initial dew point if missing from JSON
+            dew = f_dew[i] if f_dew[i] is not None else _get_dew_point_from_rh(t_f, rh)
+            
+            if t_f is not None and dew is not None:
+                # Linearly adjust air temp and dew point
+                t1 = t_f - (t_lapse * delta_h)
+                td1 = dew - (td_lapse * delta_h)
+                
+                # Lifting Condensation Level (LCL) cap: dew point cannot exceed air temp
+                if td1 >= t1:
+                    td1 = t1
+                    
+                # Update arrays in place
+                f_temps[i] = t1
+                f_dew[i] = td1
+                
+                # Recalculate non-linear RH based on adjusted temp and dew point
+                f_rhs[i] = _get_rh_from_dew_point(t1, td1)
+                
+        current_elevation_ft = target_elevation_ft
+        print(f"Data adjusted from {base_elevation_ft} ft to target elevation: {current_elevation_ft} ft.")
+
+    # 3. Calculate local pressure at the working elevation
+    p_hpa = pressure_at_elevation(current_elevation_ft)
+    print(f"Working Elevation: {current_elevation_ft} ft. Local pressure: {p_hpa:.2f} hPa")
+
+    # 4. Compute wet bulb temperatures using updated temps, RH, and pressure
     adjusted_wbs = []
     for t_f, rh in zip(f_temps, f_rhs):
         if t_f is not None and rh is not None:
@@ -167,6 +230,7 @@ def prepare_effective_temp_data(json_path, days, slope_deg=0.0, aspect_deg=180.0
         else:
             adjusted_wbs.append(None)
 
+    # 5. Compute effective temperatures with all adjusted arrays
     effective_temps = []
     for wb, t_f, dew, cloud, t in zip(adjusted_wbs, f_temps, f_dew, f_cloud, f_times):
         if wb is not None and t_f is not None and dew is not None and cloud is not None:
@@ -177,4 +241,4 @@ def prepare_effective_temp_data(json_path, days, slope_deg=0.0, aspect_deg=180.0
         else:
             effective_temps.append(None)
 
-    return elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps
+    return current_elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps

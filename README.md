@@ -97,22 +97,30 @@ Usage: wetbulb-calc effective-plot [OPTIONS] FILE
   Read standard JSON, compute effective temps, generate chart and CSV.
 
 Options:
-  --days FLOAT    Number of forecast days.
-  --slope FLOAT   Slope angle in degrees (0 = flat).
-  --aspect FLOAT  Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).
-  --help          Show this message and exit.
+  --days FLOAT       Number of forecast days.
+  --slope FLOAT      Slope angle in degrees (0 = flat).
+  --aspect FLOAT     Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).
+  --elevation FLOAT  Target elevation in ft (adjusts from data source elevation).
+  --help             Show this message and exit.
 ```
 
 ```
 # Flat terrain (default) — good baseline for open bowls
 $ wetbulb-calc effective-plot --days 4.5 weather_data.json
-Elevation: 9167.0 ft. Local pressure: 719.64 hPa
+Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: effective_temp_chart.png
 Data saved to: effective_temp_data.csv
 
 # Southeast-facing 35° slope — typical steep corn line
 $ wetbulb-calc effective-plot --days 4.5 --slope 35 --aspect 135 weather_data.json
-Elevation: 9167.0 ft. Local pressure: 719.64 hPa
+Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
+Chart saved to: effective_temp_chart.png
+Data saved to: effective_temp_data.csv
+
+# Adjust forecast to a higher elevation (data source at 9167 ft, target at 10500 ft)
+$ wetbulb-calc effective-plot --days 4.5 --elevation 10500 weather_data.json
+Data adjusted from 9167.0 ft to target elevation: 10500.0 ft.
+Working Elevation: 10500.0 ft. Local pressure: 690.38 hPa
 Chart saved to: effective_temp_chart.png
 Data saved to: effective_temp_data.csv
 ```
@@ -131,6 +139,8 @@ The chart plots effective temperature as the primary curve with wet bulb as over
 Overnight refreeze (EFDH) must reach at least 0.7× the previous day's melt integral for slope stabilization. Full structural reset requires 100–150 F-hrs of freeze.
 
 **Slope & aspect matter.** A 35° south-facing slope receives dramatically more solar energy than a flat surface or north-facing slope at the same elevation. Always match `--slope` and `--aspect` to the line you intend to ski — the corn window timing can shift by hours between aspects.
+
+**Elevation adjustment.** Weather data sources report from a fixed station elevation. Use `--elevation` to project the forecast to a different elevation. The adjustment applies standard atmospheric lapse rates (3.56°F/1000ft for air temperature, 1.0°F/1000ft for dew point) and recalculates relative humidity from the adjusted values. This is useful when the nearest data point is significantly above or below your target line — e.g., using a summit station forecast for a mid-mountain chute.
 
 Example outputs:
 

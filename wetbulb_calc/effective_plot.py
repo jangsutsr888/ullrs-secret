@@ -200,10 +200,11 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
     return fig
 
 
-def run_effective_plot(json_path, days=3.0, slope_deg=0.0, aspect_deg=180.0):
+def run_effective_plot(json_path, days=3.0, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None):
     """Load weather data, compute effective temps, generate chart and CSV."""
     elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = (
-        prepare_effective_temp_data(json_path, days, slope_deg=slope_deg, aspect_deg=aspect_deg)
+        prepare_effective_temp_data(json_path, days, slope_deg=slope_deg, aspect_deg=aspect_deg,
+                                   target_elevation_ft=target_elevation_ft)
     )
 
     plot_effective_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon, days,

@@ -39,9 +39,10 @@ def consolidation_plot(file, days, swe, depth):
 @click.option("--days", type=float, default=3.0, help="Number of forecast days.")
 @click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat).")
 @click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).")
-def effective_plot(file, days, slope, aspect):
+@click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation).")
+def effective_plot(file, days, slope, aspect, elevation):
     """Read standard JSON, compute effective temps, generate chart and CSV."""
-    run_effective_plot(file, days, slope_deg=slope, aspect_deg=aspect)
+    run_effective_plot(file, days, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation)
 
 
 # --- auto-register importer subcommands ---
