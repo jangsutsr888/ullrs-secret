@@ -1,4 +1,4 @@
-"""Unified CLI for wetbulb-calc."""
+"""Unified CLI for ullrs-secret."""
 
 import click
 
@@ -10,7 +10,7 @@ from .plot import run_plot
 
 @click.group()
 def cli():
-    """Wet bulb temperature calculator for backcountry ski forecasting."""
+    """Ullr's Secret — backcountry ski snow conditions forecaster."""
 
 
 # --- import subgroup ---
@@ -48,7 +48,7 @@ def plot(file, days, slope, aspect, elevation):
 # --- auto-register importer subcommands ---
 
 def _build_import_command(name, entry):
-    """Build a Click command for `wetbulb-calc import <name>`."""
+    """Build a Click command for `ullrs-secret import <name>`."""
     decorators = entry["decorators"]
     fetch_fn = entry["fetch"]
 

@@ -1,4 +1,4 @@
-# Wet Bulb Temperature Calculator
+# Ullr's Secret
 
 Calculates altitude-adjusted wet bulb temperature from weather forecast data for backcountry ski conditions assessment.
 
@@ -40,10 +40,10 @@ venv/bin/activate
 ## Usage
 
 ```
-$ wetbulb-calc --help
-Usage: wetbulb-calc [OPTIONS] COMMAND [ARGS]...
+$ ullrs-secret --help
+Usage: ullrs-secret [OPTIONS] COMMAND [ARGS]...
 
-  Wet bulb temperature calculator for backcountry ski forecasting.
+  Ullr's Secret — backcountry ski snow conditions forecaster.
 
 Options:
   --help  Show this message and exit.
@@ -57,8 +57,8 @@ Commands:
 ### Import weather data
 
 ```
-$ wetbulb-calc import --help
-Usage: wetbulb-calc import [OPTIONS] COMMAND [ARGS]...
+$ ullrs-secret import --help
+Usage: ullrs-secret import [OPTIONS] COMMAND [ARGS]...
 
   Import weather data from a source into standard JSON.
 
@@ -70,8 +70,8 @@ Commands:
 ```
 
 ```
-$ wetbulb-calc import nws --help
-Usage: wetbulb-calc import nws [OPTIONS] SOURCE
+$ ullrs-secret import nws --help
+Usage: ullrs-secret import nws [OPTIONS] SOURCE
 
   Fetch and parse NWS weather data from a URL or local XML file path.
 
@@ -82,7 +82,7 @@ Options:
 
 ```
 # Weather data of Newton Clark Glacier of Mt Hood
-$ wetbulb-calc import nws "https://forecast.weather.gov/MapClick.php?lat=45.3668&lon=-121.6867&FcstType=digitalDWML"
+$ ullrs-secret import nws "https://forecast.weather.gov/MapClick.php?lat=45.3668&lon=-121.6867&FcstType=digitalDWML"
 Wrote 168 observations to weather_data.json
 ```
 
@@ -91,8 +91,8 @@ Wrote 168 observations to weather_data.json
 The main output of this tool. Computes Total Effective Temperature — the actual thermal energy hitting the snow surface — by combining wet bulb temperature with shortwave (solar) and longwave (atmospheric) radiative fluxes. This is the temperature the snowpack "feels," not what the thermometer reads.
 
 ```
-$ wetbulb-calc plot --help
-Usage: wetbulb-calc plot [OPTIONS] FILE
+$ ullrs-secret plot --help
+Usage: ullrs-secret plot [OPTIONS] FILE
 
   Read standard JSON, compute effective temps, generate chart and CSV.
 
@@ -106,19 +106,19 @@ Options:
 
 ```
 # Flat terrain (default) — good baseline for open bowls
-$ wetbulb-calc plot --days 4.5 weather_data.json
+$ ullrs-secret plot --days 4.5 weather_data.json
 Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: effective_temp_chart.png
 Data saved to: effective_temp_data.csv
 
 # Southeast-facing 35° slope — typical steep corn line
-$ wetbulb-calc plot --days 4.5 --slope 35 --aspect 135 weather_data.json
+$ ullrs-secret plot --days 4.5 --slope 35 --aspect 135 weather_data.json
 Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: effective_temp_chart.png
 Data saved to: effective_temp_data.csv
 
 # Adjust forecast to a higher elevation (data source at 9167 ft, target at 10500 ft)
-$ wetbulb-calc plot --days 4.5 --elevation 10500 weather_data.json
+$ ullrs-secret plot --days 4.5 --elevation 10500 weather_data.json
 Data adjusted from 9167.0 ft to target elevation: 10500.0 ft.
 Working Elevation: 10500.0 ft. Local pressure: 690.38 hPa
 Chart saved to: effective_temp_chart.png
@@ -150,8 +150,8 @@ Example outputs:
 ### Consolidation model (melt-freeze structural analysis)
 
 ```
-$ wetbulb-calc consolidation-plot --help
-Usage: wetbulb-calc consolidation-plot [OPTIONS] FILE
+$ ullrs-secret consolidation-plot --help
+Usage: ullrs-secret consolidation-plot [OPTIONS] FILE
 
   Compute melt-freeze consolidation model and plot D_total curve.
 
@@ -163,7 +163,7 @@ Options:
 ```
 
 ```
-$ wetbulb-calc consolidation-plot --days 4.5 --swe 40 --depth 25 weather_data.json
+$ ullrs-secret consolidation-plot --days 4.5 --swe 40 --depth 25 weather_data.json
 Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: d_total_curve.png
 Data saved to: consolidation_forecast_data.csv
@@ -220,7 +220,7 @@ Elevation, air temperature, and relative humidity are the only physical values y
 
 NWS only covers US locations. If you ski in Canada, Europe, Japan, or anywhere else, you need a different weather data source. Adding an importer makes this tool work for your mountains.
 
-To add a new data source, create a file in `wetbulb_calc/importers/` (e.g., `spotwx.py`):
+To add a new data source, create a file in `ullrs_secret/importers/` (e.g., `spotwx.py`):
 
 ```python
 """SpotWx data importer."""
@@ -261,11 +261,11 @@ def fetch(api_key, lat, lon):
     }
 ```
 
-Then register it in `wetbulb_calc/importers/__init__.py`:
+Then register it in `ullrs_secret/importers/__init__.py`:
 
 ```python
 from . import nws  # noqa: E402, F401
 from . import spotwx  # noqa: E402, F401
 ```
 
-That's it. Your importer automatically appears under `wetbulb-calc import spotwx`.
+That's it. Your importer automatically appears under `ullrs-secret import spotwx`.

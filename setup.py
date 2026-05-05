@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="wetbulb-calc",
+    name="ullrs-secret",
     version="0.1.0",
-    description="Wet bulb temperature calculator for backcountry ski forecasting",
+    description="Ullr's Secret — backcountry ski snow conditions forecaster",
     python_requires=">=3.10",
-    packages=find_packages(include=["wetbulb_calc*"]),
+    packages=find_packages(include=["ullrs_secret*"]),
     install_requires=[
         "click>=8.0",
         "matplotlib>=3.8",
@@ -15,7 +15,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "wetbulb-calc=wetbulb_calc.cli:cli",
+            "ullrs-secret=ullrs_secret.cli:cli",
         ],
     },
 )
