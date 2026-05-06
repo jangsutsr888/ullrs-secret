@@ -4,6 +4,65 @@ Use weather data to forecast snow quality for backcountry skiing.
 
 Core calculation references: [English](core_calc_en.pdf) | [中文](core_calc_cn.pdf)
 
+## Motivation and Background
+
+In backcountry skiing, the quality of your descent is almost entirely dictated by the condition of the snow. However, snow is a highly dynamic medium. After a fresh storm, the snowpack undergoes a complex, continuous physical transformation driven by temperature, humidity, and solar radiation. 
+
+Understanding and predicting these transitions is the holy grail for backcountry skiers seeking the best possible downhill experience.
+
+### The Lifecycle of Snow
+To understand the problem `ullrs-secret` solves, we first need to look at the typical state machine of snow conditions following a fresh snowfall:
+
+```mermaid
+graph TD
+    %% Initial Powder Phase
+    Powder[Fresh Powder] -->|Melting: Temp/Sun/Humidity| Heavy(Wet & Heavy Snow)
+    
+    %% Transition to Crust
+    Heavy -->|Refreezing: Nightfall/Temp Drop| Breakable(Breakable Crust)
+    Breakable -->|Multiple Melt-Freeze Cycles| Supportive(Supportive Crust)
+
+    %% The Spring Corn Cycle
+    subgraph The Corn Cycle
+        Supportive -. enters cycle .-> Ice[Firm Ice / Morning]
+        Ice -->|Sun Warming| Corn{Corn Snow / The Sweet Spot}
+        Corn -->|Continued Melting| Slush[Sticky Slush]
+        Slush -->|Overnight Refreeze| Ice
+    end
+
+    %% Storm reset
+    Heavy -- "New Heavy Snowfall" --> Powder
+    Breakable -- "New Heavy Snowfall" --> Powder
+    Supportive -- "New Heavy Snowfall" --> Powder
+    Ice -- "New Heavy Snowfall" --> Powder
+    Corn -- "New Heavy Snowfall" --> Powder
+    Slush -- "New Heavy Snowfall" --> Powder
+
+    %% Styling
+    classDef reset stroke:#f00,stroke-dasharray: 5 5;
+    classDef highlight fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    class Powder,Corn highlight;
+```
+
+1. **Fresh Powder:** Immediately after a storm, the snow is typically dry, light, and offers an effortless, euphoric skiing experience.
+2. **Wet & Heavy Snow:** As the sun rises and temperatures or humidity increase, the delicate structure of the powder crystals breaks down. The snow begins to melt, becoming heavy, dense, and physically demanding to ski through due to increased friction.
+3. **The Breakable Crust:** When night falls or temperatures drop, this melted, heavy snow refreezes. Initially, this creates a thin ice shell over soft snow. This is the notorious **"breakable crust"**—a highly unpredictable and frustrating surface that cannot fully support a skier's weight.
+4. **The Supportive Crust:** If the snowpack undergoes enough of these melt-freeze cycles over several days, the icy crust eventually thickens and consolidates enough to support the weight of a skier without breaking.
+5. **The Corn Cycle:** Once a supportive crust is established, the snow enters a predictable, daily spring skiing phase known as the *Corn Cycle*:
+   - *Morning:* The surface is a hard, firm sheet of ice.
+   - *The Sweet Spot (Corn):* As the sun warms the surface, the top inch or two melts just enough to create a smooth, forgiving, and incredibly fun surface known as "corn snow." 
+   - *Slush:* If the snow continues to melt past the sweet spot, it becomes sticky, grabby slush that acts like glue on ski bases.
+
+### Enter `ullrs-secret`
+Backcountry skiers spend hours agonizing over weather forecasts trying to guess exactly where the snow is in this lifecycle. `ullrs-secret` is designed to take the guesswork out of ski touring by programmatically collecting and analyzing meteorological data to answer three critical questions:
+
+* **Powder Preservation:** How long will the freshly fallen snow remain dry and light before it degrades?
+* **Crust Consolidation:** How much time and how many melt-freeze cycles will it take for the current fresh snow to evolve past the breakable crust phase and become a supportive base?
+* **Corn O'Clock Prediction:** During the spring corn cycle, what is the precise time window—down to the hour—when the snow will be perfectly softened for a specific aspect and elevation?
+
+### Why It Matters
+By providing data-driven predictions for these transitions, `ullrs-secret` empowers backcountry skiers to meticulously plan their tours. Users can determine exactly *which day* to go, *where* to route find based on solar aspects, and *what time* to drop in. The ultimate goal? Spending less time skiing survival snow, and maximizing your chances of scoring perfect powder and perfectly timed corn.
+
 ## Limitations & Known Variances (模型局限性与已知偏差)
 
 The Universal Radiative Model utilizes an Effective Temperature ($T_{eff}$) integral (ETDH/EFDH) to estimate snow phase transitions. **The model is highly accurate for its ideal baseline environment: wide-open, high-alpine bowls with clean snow (开阔、平坦、无遮挡且雪质干净的高海拔大坡).** In these ideal zones, solar radiation is uninterrupted and albedo is predictable. However, when moving away from these ideal conditions, the framework has inherent physical and environmental limitations that users must manually account for in the field.
