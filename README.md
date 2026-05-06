@@ -30,17 +30,8 @@ graph TD
         Slush -->|Overnight Refreeze| Ice
     end
 
-    %% Storm reset
-    Heavy -- "New Heavy Snowfall" --> Powder
-    Breakable -- "New Heavy Snowfall" --> Powder
-    Supportive -- "New Heavy Snowfall" --> Powder
-    Ice -- "New Heavy Snowfall" --> Powder
-    Corn -- "New Heavy Snowfall" --> Powder
-    Slush -- "New Heavy Snowfall" --> Powder
-
     %% Styling
-    classDef reset stroke:#f00,stroke-dasharray: 5 5;
-    classDef highlight fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef highlight fill:#f9f9f9,stroke:#333,stroke-width:2px;
     class Powder,Corn highlight;
 ```
 
