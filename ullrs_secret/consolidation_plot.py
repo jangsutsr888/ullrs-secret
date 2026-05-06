@@ -17,7 +17,7 @@ from .plot_utils import (
 )
 
 
-def plot_d_total_curve(times, adjusted_wbs, elevation_ft, days, swe_mm=30.0, h0_snow_cm=20.0):
+def plot_d_total_curve(times, adjusted_wbs, elevation_ft, swe_mm=30.0, h0_snow_cm=20.0):
     """
     Generate a focused chart showing the D_total progression.
     Uses pure physics: calculates density directly from SWE and physical depth to derive
@@ -192,9 +192,9 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, days, swe_mm=30.0, h0_
     return fig
 
 
-def run_consolidation_model(json_path, days=3.0, swe_mm=30.0, h0_snow_cm=20.0):
+def run_consolidation_model(json_path, start_days=None, end_days=None, swe_mm=30.0, h0_snow_cm=20.0):
     """Load weather data, compute wet bulb temps via .core, generate D_total chart and CSV."""
-    elevation_ft, f_times, f_temps, f_rhs, adjusted_wbs = prepare_forecast_data(json_path, days)
+    elevation_ft, f_times, f_temps, f_rhs, adjusted_wbs = prepare_forecast_data(json_path, start_days, end_days)
 
-    plot_d_total_curve(f_times, adjusted_wbs, elevation_ft, days, swe_mm=swe_mm, h0_snow_cm=h0_snow_cm)
+    plot_d_total_curve(f_times, adjusted_wbs, elevation_ft, swe_mm=swe_mm, h0_snow_cm=h0_snow_cm)
     export_forecast_csv(f_times, f_temps, f_rhs, adjusted_wbs, "consolidation_forecast_data.csv")

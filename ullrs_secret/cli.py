@@ -36,13 +36,14 @@ def consolidation_plot(file, days, swe, depth):
 
 @cli.command("plot")
 @click.argument("file", type=click.Path(exists=True))
-@click.option("--days", type=float, default=3.0, help="Number of forecast days.")
+@click.option("--start", type=float, default=None, help="Start day offset (e.g. 0.0 for start of data).")
+@click.option("--end", type=float, default=None, help="End day offset (e.g. 3.0). Defaults to end of data.")
 @click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat).")
 @click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).")
 @click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation).")
-def plot(file, days, slope, aspect, elevation):
+def plot(file, start, end, slope, aspect, elevation):
     """Read standard JSON, compute effective temps, generate chart and CSV."""
-    run_plot(file, days, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation)
+    run_plot(file, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation)
 
 
 # --- auto-register importer subcommands ---

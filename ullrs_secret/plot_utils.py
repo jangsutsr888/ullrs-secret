@@ -38,7 +38,7 @@ def load_weather_data(json_path):
     }
 
 
-def prepare_forecast_data(json_path, days):
+def prepare_forecast_data(json_path, start_days=None, end_days=None):
     """Load weather JSON, filter to the time window, and compute wet bulb temps.
 
     Returns (elevation_ft, f_times, f_temps, f_rhs, adjusted_wbs, p_hpa).
@@ -55,11 +55,17 @@ def prepare_forecast_data(json_path, days):
     p_hpa = pressure_at_elevation(elevation_ft)
     print(f"Elevation: {elevation_ft} ft. Local pressure: {p_hpa:.2f} hPa")
 
-    cutoff_date = times[0] + timedelta(days=days)
+    start_date = times[0]
+    if start_days is not None:
+        start_date += timedelta(days=start_days)
+
+    end_date = times[-1]
+    if end_days is not None:
+        end_date = times[0] + timedelta(days=end_days)
 
     f_times, f_temps, f_rhs = [], [], []
     for t, temp, rh in zip(times, temps_f, rh_values):
-        if t <= cutoff_date:
+        if start_date <= t <= end_date:
             f_times.append(t)
             f_temps.append(temp)
             f_rhs.append(rh)
@@ -154,7 +160,7 @@ def _get_rh_from_dew_point(temp_f, dew_point_f):
     rh = (e / es) * 100.0
     return max(0.0, min(100.0, rh))
 
-def prepare_effective_temp_data(json_path, days, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None):
+def prepare_effective_temp_data(json_path, start_days=None, end_days=None, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None):
     """Load weather JSON, optionally adjust to a new elevation, and compute temperatures.
 
     Returns (elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps).
@@ -172,11 +178,18 @@ def prepare_effective_temp_data(json_path, days, slope_deg=0.0, aspect_deg=180.0
     if not times:
         raise click.ClickException("No valid time series data found in JSON.")
 
+    start_date = times[0]
+    if start_days is not None:
+        start_date += timedelta(days=start_days)
+
+    end_date = times[-1]
+    if end_days is not None:
+        end_date = times[0] + timedelta(days=end_days)
+
     # 1. Filter by time window
-    cutoff_date = times[0] + timedelta(days=days)
     f_times, f_temps, f_rhs, f_dew, f_cloud = [], [], [], [], []
     for t, temp, rh, dew, cloud in zip(times, temps_f, rh_values, dew_points_f, cloud_cover_pct):
-        if t <= cutoff_date:
+        if start_date <= t <= end_date:
             f_times.append(t)
             f_temps.append(temp)
             f_rhs.append(rh)

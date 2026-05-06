@@ -18,7 +18,7 @@ CORN_WINDOW_MIN_FHRS = 60.0
 CORN_WINDOW_MAX_FHRS = 90.0
 
 
-def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, lat, lon, days,
+def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
                            slope_deg=0.0, aspect_deg=180.0):
     """Generate the effective temperature forecast chart with melt/freeze integral annotations."""
     fig, ax = plt.subplots(figsize=(20, 7))
@@ -132,7 +132,7 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
     lon_str = f"{abs(lon):.4f}°{'W' if lon < 0 else 'E'}" if lon is not None else "N/A"
 
     ax.set_title(
-        f"Hourly Effective Temp vs Wet Bulb Temp ({days} Days Forecast) - Elev: {elevation_ft} ft\n"
+        f"Hourly Effective Temp vs Wet Bulb Temp - Elev: {elevation_ft} ft\n"
         f"Location: {lat_str}, {lon_str} | Slope: {slope_deg:.0f}° {aspect_label} aspect | Timezone: US Pacific Time (PT)",
         fontsize=18,
     )
@@ -200,14 +200,14 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
     return fig
 
 
-def run_plot(json_path, days=3.0, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None):
+def run_plot(json_path, start_days=None, end_days=None, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None):
     """Load weather data, compute effective temps, generate chart and CSV."""
     elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = (
-        prepare_effective_temp_data(json_path, days, slope_deg=slope_deg, aspect_deg=aspect_deg,
+        prepare_effective_temp_data(json_path, start_days=start_days, end_days=end_days, slope_deg=slope_deg, aspect_deg=aspect_deg,
                                    target_elevation_ft=target_elevation_ft)
     )
 
-    plot_effective_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon, days,
+    plot_effective_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
                            slope_deg=slope_deg, aspect_deg=aspect_deg)
     export_forecast_csv(
         f_times, f_temps, f_rhs, adjusted_wbs, "effective_temp_data.csv",
