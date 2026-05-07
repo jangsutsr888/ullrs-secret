@@ -10,6 +10,32 @@ def saturation_vapor_pressure(t_celsius):
     return 6.112 * math.exp((17.67 * t_celsius) / (t_celsius + 243.5))
 
 
+def get_dew_point_from_rh(temp_f, rh):
+    """Calculate dew point (F) from temperature (F) and relative humidity (%)."""
+    if temp_f is None or rh is None:
+        return None
+    t_c = (temp_f - 32) * 5.0 / 9.0
+    es = 6.112 * math.exp((17.67 * t_c) / (t_c + 243.5))
+    e = es * (rh / 100.0)
+    if e <= 0:
+        return None
+    ln_e = math.log(e / 6.112)
+    td_c = (243.5 * ln_e) / (17.67 - ln_e)
+    return td_c * 9.0 / 5.0 + 32.0
+
+
+def get_rh_from_dew_point(temp_f, dew_point_f):
+    """Calculate relative humidity (%) from temperature (F) and dew point (F)."""
+    if temp_f is None or dew_point_f is None:
+        return None
+    t_c = (temp_f - 32) * 5.0 / 9.0
+    td_c = (dew_point_f - 32) * 5.0 / 9.0
+    es = 6.112 * math.exp((17.67 * t_c) / (t_c + 243.5))
+    e = 6.112 * math.exp((17.67 * td_c) / (td_c + 243.5))
+    rh = (e / es) * 100.0
+    return max(0.0, min(100.0, rh))
+
+
 def psychrometric_equation(tw_c, t_c, e, p_hpa):
     """Psychrometric equation for fsolve root-finding."""
     A = 6.66e-4

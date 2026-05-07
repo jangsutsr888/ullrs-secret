@@ -1,0 +1,115 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{hyperref}
+\usepackage{ctex}
+
+\title{Ullr's Secret 核心计算理论依据}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{概述}
+本文档列出了 \texttt{core.py} 中所实现计算的具体物理公式与理论依据。主要面向程序员阅读，便于理解代码背后的数学模型。
+
+\section{蒸汽压与湿度}
+\subsection{\texttt{saturation\_vapor\_pressure(t\_celsius)}}
+给定温度 $T$ ($^\circ\text{C}$)，其饱和蒸汽压 $e_s$ (hPa) 由马格努斯公式 (Magnus formula) 计算得出：
+\[
+e_s(T) = 6.112 \exp\left(\frac{17.67 T}{T + 243.5}\right)
+\]
+
+\subsection{\texttt{get\_dew\_point\_from\_rh(temp\_f, rh)}}
+首先根据相对湿度 $RH$ (\%) 计算实际蒸汽压 $e$：
+\[
+e = e_s(T) \times \frac{RH}{100}
+\]
+然后通过马格努斯公式的逆运算求得露点温度 $T_d$ ($^\circ\text{C}$)：
+\[
+T_d = \frac{243.5 \ln(e / 6.112)}{17.67 - \ln(e / 6.112)}
+\]
+
+\subsection{\texttt{get\_rh\_from\_dew\_point(temp\_f, dew\_point\_f)}}
+相对湿度通过露点 $T_d$ 的饱和蒸汽压与空气温度 $T$ 的饱和蒸汽压之比计算：
+\[
+RH = \left( \frac{e_s(T_d)}{e_s(T)} \right) \times 100\%
+\]
+
+\section{湿球温度}
+\subsection{\texttt{psychrometric\_equation(tw\_c, t\_c, e, p\_hpa)} 与 \texttt{wet\_bulb\_f(...)}}
+湿球温度 $T_w$ 的求解基于干湿球方程 (Psychrometric equation)：
+\[
+e_s(T_w) - P \cdot A \cdot (1 + 0.00115 T_w) \cdot (T - T_w) - e = 0
+\]
+其中 $P$ 为大气压 (hPa)，$A = 6.66 \times 10^{-4}$ 为干湿球常数。代码中使用 \texttt{fsolve} 求根算法找到满足该方程的 $T_w$。
+
+\section{大气压力}
+\subsection{\texttt{pressure\_at\_elevation(elevation\_ft)}}
+给定海拔 $h$ (米) 的标准大气压 $P$ (hPa) 的近似公式为：
+\[
+P(h) = 1013.25 \left( 1 - 2.25577 \times 10^{-5} h \right)^{5.25588}
+\]
+
+\section{太阳位置}
+\subsection{\texttt{estimate\_solar\_position(lat, lon, dt\_aware)}}
+通过当前的 UTC 时间和经纬度，计算太阳的高度角 $\alpha$ 与方位角 $\gamma_s$。
+\begin{align*}
+b &= \frac{2\pi}{365}(N - 81) \quad \text{($N$ 为一年中的第几天)} \\
+\delta &= 23.45^\circ \sin(b) \quad \text{(赤纬角)} \\
+\text{EOT} &= 9.87 \sin(2b) - 7.53 \cos(b) - 1.5 \sin(b) \quad \text{(均时差)} \\
+\text{LST} &= \text{UTC 时} + \frac{\text{经度}}{15} + \frac{\text{EOT}}{60} \quad \text{(地方太阳时)} \\
+\omega &= 15^\circ (\text{LST} - 12) \quad \text{(时角)}
+\end{align*}
+高度角 $\alpha$：
+\[
+\sin(\alpha) = \sin(\phi)\sin(\delta) + \cos(\phi)\cos(\delta)\cos(\omega)
+\]
+方位角 $\gamma_s$：
+\[
+\cos(\gamma_s) = \frac{\sin(\delta) - \sin(\alpha)\sin(\phi)}{\cos(\alpha)\cos(\phi)}
+\]
+
+\section{辐射等效温度}
+\subsection{\texttt{calculate\_radiative\_equivalent\_temps(...)}}
+为评估太阳与热辐射对雪面温度的影响，使用传热系数 $K_{rad} = 8.0$ 计算短波辐射等效温度 $T_{SW,eq}$ 和长波辐射等效温度 $T_{LW,eq}$。
+
+\subsubsection*{短波辐射等效 (Shortwave Equivalent)}
+在坡度为 $\beta$、坡向为 $\gamma_a$ 的地形上，太阳入射角 $\theta_i$ 为：
+\[
+\cos(\theta_i) = \cos(\beta)\sin(\alpha) + \sin(\beta)\cos(\alpha)\cos(\gamma_s - \gamma_a)
+\]
+结合云量比例 $c$ 和地表反照率 $\alpha_s$，计算净短波辐射 $SW_{net}$：
+\[
+SW_{net} = 1361 \cdot \cos(\theta_i) \cdot (1 - 0.65 c^2) \cdot (1 - \alpha_s)
+\]
+\[
+T_{SW,eq} = \frac{SW_{net}}{K_{rad}}
+\]
+
+\subsubsection*{长波辐射等效 (Longwave Equivalent)}
+基于蒸汽压 $e_a$ 计算晴空发射率 $\epsilon_{clear}$：
+\[
+\epsilon_{clear} = 0.51 + 0.066 \sqrt{e_a}
+\]
+综合大气发射率 $\epsilon_{atm} = (1 - c)\epsilon_{clear} + c$。
+考虑到地形遮挡，天空视角因子为 $SVF = \cos^2(\beta / 2)$，假定地形发射率 $\epsilon_{terrain} = 0.98$：
+\[
+LW_{net} = \sigma \left[ SVF \cdot \epsilon_{atm} T_{air}^4 + (1 - SVF) \cdot \epsilon_{terrain} T_{air}^4 - T_{snow}^4 \right]
+\]
+其中 $T_{snow} = 273.15$ K，斯特藩-玻尔兹曼常数 $\sigma = 5.67 \times 10^{-8}$。
+\[
+T_{LW,eq} = \frac{LW_{net}}{K_{rad}}
+\]
+
+\section{有效温度}
+\subsection{\texttt{effective\_temperature\_f(...)}}
+最终的雪面有效温度结合了热力学的湿球温度和辐射等效温度偏移：
+\[
+T_{eff} = T_w + T_{SW,eq} + T_{LW,eq}
+\]
+
+\end{document}

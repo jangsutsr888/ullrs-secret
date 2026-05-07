@@ -7,7 +7,13 @@ import click
 import pandas as pd
 import pytz
 
-from .core import effective_temperature_f, pressure_at_elevation, wet_bulb_f
+from .core import (
+    effective_temperature_f,
+    get_dew_point_from_rh,
+    get_rh_from_dew_point,
+    pressure_at_elevation,
+    wet_bulb_f,
+)
 
 PT_ZONE = pytz.timezone("America/Los_Angeles")
 
@@ -91,31 +97,8 @@ def export_forecast_csv(f_times, f_temps, f_rhs, adjusted_wbs, filename, effecti
 
 
 # ==========================================
-# Helper Functions: RH <-> Dew Point Conversions (Magnus-Tetens)
+# Helper Functions: Data Preparation
 # ==========================================
-def _get_dew_point_from_rh(temp_f, rh):
-    """Calculate dew point from temperature and relative humidity."""
-    if temp_f is None or rh is None:
-        return None
-    t_c = (temp_f - 32) * 5.0 / 9.0
-    es = 6.112 * math.exp((17.67 * t_c) / (t_c + 243.5))
-    e = es * (rh / 100.0)
-    if e <= 0:
-        return None
-    ln_e = math.log(e / 6.112)
-    td_c = (243.5 * ln_e) / (17.67 - ln_e)
-    return td_c * 9.0 / 5.0 + 32.0
-
-def _get_rh_from_dew_point(temp_f, dew_point_f):
-    """Calculate relative humidity from temperature and dew point."""
-    if temp_f is None or dew_point_f is None:
-        return None
-    t_c = (temp_f - 32) * 5.0 / 9.0
-    td_c = (dew_point_f - 32) * 5.0 / 9.0
-    es = 6.112 * math.exp((17.67 * t_c) / (t_c + 243.5))
-    e = 6.112 * math.exp((17.67 * td_c) / (td_c + 243.5))
-    rh = (e / es) * 100.0
-    return max(0.0, min(100.0, rh))
 
 def prepare_effective_temp_data(json_path, start_days=None, end_days=None, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None):
     """Load weather JSON, optionally adjust to a new elevation, and compute temperatures.
@@ -166,7 +149,7 @@ def prepare_effective_temp_data(json_path, start_days=None, end_days=None, slope
             rh = f_rhs[i]
             
             # Fallback: compute initial dew point if missing from JSON
-            dew = f_dew[i] if f_dew[i] is not None else _get_dew_point_from_rh(t_f, rh)
+            dew = f_dew[i] if f_dew[i] is not None else get_dew_point_from_rh(t_f, rh)
             
             if t_f is not None and dew is not None:
                 # Linearly adjust air temp and dew point
@@ -182,7 +165,7 @@ def prepare_effective_temp_data(json_path, start_days=None, end_days=None, slope
                 f_dew[i] = td1
                 
                 # Recalculate non-linear RH based on adjusted temp and dew point
-                f_rhs[i] = _get_rh_from_dew_point(t1, td1)
+                f_rhs[i] = get_rh_from_dew_point(t1, td1)
                 
         current_elevation_ft = target_elevation_ft
         print(f"Data adjusted from {base_elevation_ft} ft to target elevation: {current_elevation_ft} ft.")

@@ -1,0 +1,114 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{hyperref}
+
+\title{Ullr's Secret Core Calculations Reference}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Overview}
+This document outlines the physical formulas and theoretical basis for the calculations implemented in \texttt{core.py}.
+
+\section{Vapor Pressure and Humidity}
+\subsection{\texttt{saturation\_vapor\_pressure(t\_celsius)}}
+The saturation vapor pressure $e_s$ (in hPa) at a given temperature $T$ (in $^\circ\text{C}$) is calculated using the Magnus formula:
+\[
+e_s(T) = 6.112 \exp\left(\frac{17.67 T}{T + 243.5}\right)
+\]
+
+\subsection{\texttt{get\_dew\_point\_from\_rh(temp\_f, rh)}}
+First, the actual vapor pressure $e$ is determined from the relative humidity ($RH$ in \%):
+\[
+e = e_s(T) \times \frac{RH}{100}
+\]
+The dew point temperature $T_d$ (in $^\circ\text{C}$) is derived by rearranging the Magnus formula:
+\[
+T_d = \frac{243.5 \ln(e / 6.112)}{17.67 - \ln(e / 6.112)}
+\]
+
+\subsection{\texttt{get\_rh\_from\_dew\_point(temp\_f, dew\_point\_f)}}
+The relative humidity is calculated from the ratio of actual vapor pressure (saturation vapor pressure at the dew point $T_d$) to the saturation vapor pressure at air temperature $T$:
+\[
+RH = \left( \frac{e_s(T_d)}{e_s(T)} \right) \times 100\%
+\]
+
+\section{Wet Bulb Temperature}
+\subsection{\texttt{psychrometric\_equation(tw\_c, t\_c, e, p\_hpa)} and \texttt{wet\_bulb\_f(...)}}
+The wet bulb temperature $T_w$ is solved using the psychrometric equation:
+\[
+e_s(T_w) - P \cdot A \cdot (1 + 0.00115 T_w) \cdot (T - T_w) - e = 0
+\]
+where $P$ is the atmospheric pressure (hPa) and $A = 6.66 \times 10^{-4}$ is the psychrometric constant. The root-finding algorithm (\texttt{fsolve}) finds the $T_w$ that satisfies this equation.
+
+\section{Atmospheric Pressure}
+\subsection{\texttt{pressure\_at\_elevation(elevation\_ft)}}
+Standard atmospheric pressure $P$ (hPa) at a given elevation $h$ (meters) is approximated by:
+\[
+P(h) = 1013.25 \left( 1 - 2.25577 \times 10^{-5} h \right)^{5.25588}
+\]
+
+\section{Solar Position}
+\subsection{\texttt{estimate\_solar\_position(lat, lon, dt\_aware)}}
+The solar elevation angle $\alpha$ and azimuth angle $\gamma_s$ are calculated from the current UTC time and location.
+\begin{align*}
+b &= \frac{2\pi}{365}(N - 81) \quad \text{($N$ is day of year)} \\
+\delta &= 23.45^\circ \sin(b) \quad \text{(Declination)} \\
+\text{EOT} &= 9.87 \sin(2b) - 7.53 \cos(b) - 1.5 \sin(b) \quad \text{(Equation of Time)} \\
+\text{LST} &= \text{UTC Hour} + \frac{\text{Longitude}}{15} + \frac{\text{EOT}}{60} \quad \text{(Local Solar Time)} \\
+\omega &= 15^\circ (\text{LST} - 12) \quad \text{(Hour Angle)}
+\end{align*}
+Elevation $\alpha$:
+\[
+\sin(\alpha) = \sin(\phi)\sin(\delta) + \cos(\phi)\cos(\delta)\cos(\omega)
+\]
+Azimuth $\gamma_s$:
+\[
+\cos(\gamma_s) = \frac{\sin(\delta) - \sin(\alpha)\sin(\phi)}{\cos(\alpha)\cos(\phi)}
+\]
+
+\section{Radiative Equivalent Temperatures}
+\subsection{\texttt{calculate\_radiative\_equivalent\_temps(...)}}
+To estimate the impact of solar and thermal radiation on snow surface temperatures, we compute equivalent temperature shifts $T_{SW,eq}$ (shortwave) and $T_{LW,eq}$ (longwave) using a heat transfer coefficient $K_{rad} = 8.0$.
+
+\subsubsection*{Shortwave Equivalent}
+The angle of incidence $\theta_i$ on a slope (angle $\beta$, aspect $\gamma_a$):
+\[
+\cos(\theta_i) = \cos(\beta)\sin(\alpha) + \sin(\beta)\cos(\alpha)\cos(\gamma_s - \gamma_a)
+\]
+Net shortwave radiation ($SW_{net}$) incorporating cloud cover fraction $c$ and surface albedo $\alpha_s$:
+\[
+SW_{net} = 1361 \cdot \cos(\theta_i) \cdot (1 - 0.65 c^2) \cdot (1 - \alpha_s)
+\]
+\[
+T_{SW,eq} = \frac{SW_{net}}{K_{rad}}
+\]
+
+\subsubsection*{Longwave Equivalent}
+Clear sky emissivity $\epsilon_{clear}$ depends on vapor pressure $e_a$:
+\[
+\epsilon_{clear} = 0.51 + 0.066 \sqrt{e_a}
+\]
+Total atmospheric emissivity $\epsilon_{atm} = (1 - c)\epsilon_{clear} + c$. 
+The total incoming longwave radiation considers the Sky View Factor ($SVF = \cos^2(\beta / 2)$) and terrain emissivity ($\epsilon_{terrain} = 0.98$):
+\[
+LW_{net} = \sigma \left[ SVF \cdot \epsilon_{atm} T_{air}^4 + (1 - SVF) \cdot \epsilon_{terrain} T_{air}^4 - T_{snow}^4 \right]
+\]
+where $T_{snow} = 273.15$ K and $\sigma = 5.67 \times 10^{-8}$.
+\[
+T_{LW,eq} = \frac{LW_{net}}{K_{rad}}
+\]
+
+\section{Effective Temperature}
+\subsection{\texttt{effective\_temperature\_f(...)}}
+The final snow effective temperature combines the thermodynamic wet-bulb temperature with the radiative shifts:
+\[
+T_{eff} = T_w + T_{SW,eq} + T_{LW,eq}
+\]
+
+\end{document}
