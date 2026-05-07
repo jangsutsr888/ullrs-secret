@@ -38,49 +38,6 @@ def load_weather_data(json_path):
     }
 
 
-def prepare_forecast_data(json_path, start_days=None, end_days=None):
-    """Load weather JSON, filter to the time window, and compute wet bulb temps.
-
-    Returns (elevation_ft, f_times, f_temps, f_rhs, adjusted_wbs, p_hpa).
-    """
-    wd = load_weather_data(json_path)
-    elevation_ft = wd["elevation_ft"]
-    times = wd["times"]
-    temps_f = wd["temps_f"]
-    rh_values = wd["rh_values"]
-
-    if not times:
-        raise click.ClickException("No valid time series data found in JSON.")
-
-    p_hpa = pressure_at_elevation(elevation_ft)
-    print(f"Elevation: {elevation_ft} ft. Local pressure: {p_hpa:.2f} hPa")
-
-    start_date = times[0]
-    if start_days is not None:
-        start_date += timedelta(days=start_days)
-
-    end_date = times[-1]
-    if end_days is not None:
-        end_date = times[0] + timedelta(days=end_days)
-
-    f_times, f_temps, f_rhs = [], [], []
-    for t, temp, rh in zip(times, temps_f, rh_values):
-        if start_date <= t <= end_date:
-            f_times.append(t)
-            f_temps.append(temp)
-            f_rhs.append(rh)
-
-    adjusted_wbs = []
-    for t_f, rh in zip(f_temps, f_rhs):
-        if t_f is not None and rh is not None:
-            t_c = (t_f - 32) * 5.0 / 9.0
-            adjusted_wbs.append(wet_bulb_f(t_c, rh, p_hpa))
-        else:
-            adjusted_wbs.append(None)
-
-    return elevation_ft, f_times, f_temps, f_rhs, adjusted_wbs
-
-
 def find_crossings_and_segments(v_times, v_wbs, threshold=32.0):
     """Split a time series into segments at threshold crossings.
 

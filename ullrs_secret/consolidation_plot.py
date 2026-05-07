@@ -1,5 +1,5 @@
 """
-Read standard weather JSON, compute wet bulb temperatures via .core,
+Read standard weather JSON, compute effective temperatures via .core,
 calculate melt-freeze structural consolidation, and plot the D_total curve.
 """
 
@@ -13,11 +13,11 @@ from .plot_utils import (
     compute_segment_integral,
     export_forecast_csv,
     find_crossings_and_segments,
-    prepare_forecast_data,
+    prepare_effective_temp_data,
 )
 
 
-def plot_d_total_curve(times, adjusted_wbs, elevation_ft, swe_mm=30.0, h0_snow_cm=20.0):
+def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_snow_cm=20.0, slope_deg=0.0, aspect_deg=180.0):
     """
     Generate a focused chart showing the D_total progression.
     Uses pure physics: calculates density directly from SWE and physical depth to derive
@@ -25,17 +25,17 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, swe_mm=30.0, h0_snow_c
     """
     fig, ax = plt.subplots(figsize=(16, 7))
 
-    valid_data = [(t, w) for t, w in zip(times, adjusted_wbs) if w is not None]
+    valid_data = [(t, e) for t, e in zip(times, effective_temps) if e is not None]
 
     if not valid_data:
         print("No valid data to plot.")
         return fig
 
     v_times = [d[0] for d in valid_data]
-    v_wbs = [d[1] for d in valid_data]
+    v_effs = [d[1] for d in valid_data]
 
     # --- 1. Identify Crossings and Segments ---
-    segments, crossing_times = find_crossings_and_segments(v_times, v_wbs)
+    segments, crossing_times = find_crossings_and_segments(v_times, v_effs)
 
     # --- 2. Calculate Integrals & Dynamic Thermodynamic Model ---
 
@@ -52,43 +52,62 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, swe_mm=30.0, h0_snow_c
     K_M = (real_density * 2.0) + 0.1
     K_F = (real_density * 10.0) + 0.5
 
-    S_SOUTH = 20.0
-
     current_Im = 0.0
     current_If = 0.0
 
     d_total_times = [v_times[0]]
     d_total_values = [0.0]
     current_d_total = 0.0
+    current_d_wet = 0.0  # Tracks un-frozen liquid water penetration depth
 
     for seg in segments:
         if len(seg) < 2:
             continue
         seg_times = [p[0] for p in seg]
-        seg_wbs = [p[1] for p in seg]
+        seg_effs = [p[1] for p in seg]
 
-        integral = compute_segment_integral(seg_times, seg_wbs)
+        integral = compute_segment_integral(seg_times, seg_effs)
 
         mid_idx = len(seg) // 2
-        is_melt = seg_wbs[mid_idx] > 32.0
+        is_melt = seg_effs[mid_idx] > 32.0
 
         if is_melt:
             if current_If > 0:
+                M_eff = current_Im
+                D_melt = K_M * M_eff
+                D_freeze = K_F * math.sqrt(current_If)
+
+                # ===== FIXED: Two-State (Crust / Wet Layer) Mass Balance =====
+                # 1. Melt phase: daytime heat first attacks existing crust, turning it into wet snow
+                melt_from_crust = min(current_d_total, D_melt)
+                current_d_total -= melt_from_crust
+                current_d_wet += D_melt  # Total wet snow generated
+                
+                # Constrain total wet depth to available snow depth
+                current_d_wet = min(h0_snow_cm - current_d_total, current_d_wet)
+
                 # ===== MOD 1: Freeze Failure (Energy Deficit) =====
-                # If the nightly freeze integral is less than 30% of the daytime melt,
+                # If the nightly freeze integral is less than 70% of the daytime melt,
                 # the free water acts as a lubricant rather than a bond.
-                # The existing consolidated base begins to disintegrate.
-                if current_Im > 0 and current_If < (current_Im * 0.3):
-                    degradation = (current_Im * 0.3 - current_If) * 0.5
+                if current_Im > 0 and current_If < (current_Im * 0.7):
+                    # FIX: Dimensionality - Convert energy deficit to physical depth using K_M
+                    energy_deficit = (current_Im * 0.7) - current_If
+                    degradation = K_M * energy_deficit * 0.5
+                    
                     current_d_total -= degradation
-                    current_d_total = max(0, current_d_total) # Depth cannot be negative
+                    current_d_total = max(0, current_d_total)
+                    
+                    # Partial freeze still converts some wet snow to crust
+                    freeze_amount = min(current_d_wet, D_freeze)
+                    current_d_total += freeze_amount
+                    current_d_wet -= freeze_amount
+                    current_d_wet = max(0, current_d_wet)
                 else:
                     # Normal refreeze and consolidation process
-                    M_eff = current_Im + S_SOUTH
-                    D_melt = K_M * M_eff
-                    D_freeze = K_F * math.sqrt(current_If)
-                    D_cycle = min(D_melt, D_freeze)
-                    current_d_total += D_cycle
+                    freeze_amount = min(current_d_wet, D_freeze)
+                    current_d_total += freeze_amount
+                    current_d_wet -= freeze_amount
+                    current_d_wet = max(0, current_d_wet)
                 # ===================================================
 
                 # Record the supportable state at the end of the morning freezing period
@@ -103,11 +122,11 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, swe_mm=30.0, h0_snow_c
 
             # ===== MOD 2: Isothermal Collapse (Overheating) =====
             # If the snowpack experiences extreme, sustained melting without a refreeze
-            # (e.g., cumulative melt integral > 40 F-hrs), the isothermal structure
+            # (e.g., cumulative melt integral > 120 F-hrs), the isothermal structure
             # becomes saturated with liquid water and rapidly collapses.
-            if current_Im > 40.0 and current_d_total > 0:
-                # Continuous decay proportional to the melt integral step
-                current_d_total -= (integral * 0.2)
+            if current_Im > 120.0 and current_d_total > 0:
+                # FIX: Dimensionality - Use K_M to convert integral step to depth
+                current_d_total -= (K_M * integral * 0.2)
                 current_d_total = max(0, current_d_total)
 
                 # Real-time recording of the decline in supportability during the daytime heat
@@ -141,8 +160,12 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, swe_mm=30.0, h0_snow_c
             break
 
     # --- 4. Formatting & Layout ---
+    ASPECT_LABELS = {0: "N", 45: "NE", 90: "E", 135: "SE", 180: "S", 225: "SW", 270: "W", 315: "NW", 360: "N"}
+    closest_cardinal = min(ASPECT_LABELS, key=lambda k: abs(k - aspect_deg % 360))
+    aspect_label = ASPECT_LABELS[closest_cardinal]
+
     ax.set_title(
-        f"South Aspect Corn Base Consolidation ($D_{{total}}$)\n"
+        f"{aspect_label} Aspect ({slope_deg}°) Corn Base Consolidation ($D_{{total}}$)\n"
         f"SWE: {swe_mm} mm | Depth: {h0_snow_cm} cm | Density: {real_density*100:.0f}% | Elev: {elevation_ft} ft",
         fontsize=18, fontweight="bold", pad=15
     )
@@ -174,7 +197,7 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, swe_mm=30.0, h0_snow_c
         f" * Real-time Density: {real_density*100:.1f}% (Derived from {swe_mm} mm SWE and {h0_snow_cm} cm Depth)\n"
         f" * Dynamic Percolation (K_M) = {K_M:.2f}  | Dynamic Freeze Conductivity (K_F) = {K_F:.2f}\n"
         " * D_melt = K_M * Effective Melt      | D_freeze = K_F * sqrt(Freeze Integral)\n"
-        " * Degradation Penalties applied for Freeze Failures (If < 30% Im) and Isothermal Overheating (Im > 40).\n"
+        " * Degradation Penalties applied for Freeze Failures (If < 70% Im) and Isothermal Overheating (Im > 120).\n"
         "----------------------------------------------------------------------------------------------------------------------\n"
         " Decision Matrix: \n"
         " - Wait until D_total crosses the Support Threshold before committing to steep lines.\n"
@@ -192,9 +215,11 @@ def plot_d_total_curve(times, adjusted_wbs, elevation_ft, swe_mm=30.0, h0_snow_c
     return fig
 
 
-def run_consolidation_model(json_path, start_days=None, end_days=None, swe_mm=30.0, h0_snow_cm=20.0):
-    """Load weather data, compute wet bulb temps via .core, generate D_total chart and CSV."""
-    elevation_ft, f_times, f_temps, f_rhs, adjusted_wbs = prepare_forecast_data(json_path, start_days, end_days)
+def run_consolidation_model(json_path, start_days=None, end_days=None, swe_mm=30.0, h0_snow_cm=20.0, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None):
+    """Load weather data, compute effective temps via .core, generate D_total chart and CSV."""
+    elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
+        json_path, start_days, end_days, slope_deg=slope_deg, aspect_deg=aspect_deg, target_elevation_ft=target_elevation_ft
+    )
 
-    plot_d_total_curve(f_times, adjusted_wbs, elevation_ft, swe_mm=swe_mm, h0_snow_cm=h0_snow_cm)
-    export_forecast_csv(f_times, f_temps, f_rhs, adjusted_wbs, "consolidation_forecast_data.csv")
+    plot_d_total_curve(f_times, effective_temps, elevation_ft, swe_mm=swe_mm, h0_snow_cm=h0_snow_cm, slope_deg=slope_deg, aspect_deg=aspect_deg)
+    export_forecast_csv(f_times, f_temps, f_rhs, adjusted_wbs, "consolidation_forecast_data.csv", effective_temps=effective_temps)

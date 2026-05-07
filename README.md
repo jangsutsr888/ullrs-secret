@@ -217,9 +217,19 @@ Chart saved to: d_total_curve.png
 Data saved to: consolidation_forecast_data.csv
 ```
 
-This models how melt-freeze cycles structurally consolidate new snow into a supportable corn base. Snow density is derived from SWE and physical depth, which drives dynamic heat transfer and percolation coefficients. The chart tracks cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable. Degradation penalties apply for insufficient overnight refreezes and isothermal overheating.
+This models how melt-freeze cycles structurally consolidate new snow into a supportable corn base. Snow density is derived from SWE and physical depth, which drives dynamic heat transfer and percolation coefficients.
 
-**TODO:** This plot currently uses wet bulb temperature for its melt/freeze cycle detection. It needs to be updated to use effective temperature (incorporating shortwave and longwave radiation data) for consistency with the radiative model.
+**Physics Engine: Two-State Mass Balance**
+The engine utilizes a rigorous "Two-State Mass Balance" model, tracking both the consolidated icy crust layer and the un-frozen wet snow layer. Rather than linearly accumulating depth infinitely, the model simulates physical reality:
+- **Daytime Melting:** Solar heat attacks the existing crust first, breaking it down and converting it into wet, un-frozen snow (liquid penetration depth).
+- **Nighttime Freezing:** Overnight freezing energy is applied *only* to the available wet snow layer, converting it back into crust, bounded by the square root decay of Stefan's Equation.
+
+This prevents the "false positive" trap of infinite depth accumulation during shallow, weak freeze-thaw cycles. The chart tracks this cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable.
+
+**Degradation Penalties**
+Degradation penalties apply for insufficient overnight refreezes (Freeze Failure) and isothermal overheating. These energy deficits (degree-hours) are mathematically converted into physical crust degradation (cm) using the dynamic percolation coefficient ($K_M$), ensuring dimensional accuracy across the thermodynamic model.
+
+
 
 ## Output
 
