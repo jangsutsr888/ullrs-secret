@@ -145,28 +145,30 @@ Usage: ullrs-secret plot [OPTIONS] FILE
   Read standard JSON, compute effective temps, generate chart and CSV.
 
 Options:
-  --days FLOAT       Number of forecast days.
+  --start FLOAT      Start day offset (e.g. 0.0 for start of data).
+  --end FLOAT        End day offset (e.g. 3.0). Defaults to end of data.
   --slope FLOAT      Slope angle in degrees (0 = flat).
   --aspect FLOAT     Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).
-  --elevation FLOAT  Target elevation in ft (adjusts from data source elevation).
+  --elevation FLOAT  Target elevation in ft (adjusts from data source
+                     elevation).
   --help             Show this message and exit.
 ```
 
 ```
 # Flat terrain (default) — good baseline for open bowls
-$ ullrs-secret plot --days 4.5 weather_data.json
+$ ullrs-secret plot --end 4.5 weather_data.json
 Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: effective_temp_chart.png
 Data saved to: effective_temp_data.csv
 
 # Southeast-facing 35° slope — typical steep corn line
-$ ullrs-secret plot --days 4.5 --slope 35 --aspect 135 weather_data.json
+$ ullrs-secret plot --end 4.5 --slope 35 --aspect 135 weather_data.json
 Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: effective_temp_chart.png
 Data saved to: effective_temp_data.csv
 
 # Adjust forecast to a higher elevation (data source at 9167 ft, target at 10500 ft)
-$ ullrs-secret plot --days 4.5 --elevation 10500 weather_data.json
+$ ullrs-secret plot --end 4.5 --elevation 10500 weather_data.json
 Data adjusted from 9167.0 ft to target elevation: 10500.0 ft.
 Working Elevation: 10500.0 ft. Local pressure: 690.38 hPa
 Chart saved to: effective_temp_chart.png
@@ -204,7 +206,8 @@ Usage: ullrs-secret consolidation-plot [OPTIONS] FILE
   Compute melt-freeze consolidation model and plot D_total curve.
 
 Options:
-  --days FLOAT   Number of forecast days.
+  --start FLOAT      Start day offset (e.g. 0.0 for start of data).
+  --end FLOAT        End day offset (e.g. 3.0). Defaults to end of data.
   --swe FLOAT    Snow water equivalent in mm.
   --depth FLOAT  Physical snow depth in cm.
   --help         Show this message and exit.
