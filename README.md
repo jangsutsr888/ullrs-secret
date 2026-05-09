@@ -54,6 +54,9 @@ Backcountry skiers spend hours agonizing over weather forecasts trying to guess 
 ### Why It Matters
 By providing data-driven predictions for these transitions, `ullrs-secret` empowers backcountry skiers to meticulously plan their tours. Users can determine exactly *which day* to go, *where* to route find based on solar aspects, and *what time* to drop in. The ultimate goal? Spending less time skiing survival snow, and maximizing your chances of scoring perfect powder and perfectly timed corn.
 
+### Real-World Example
+Curious how this looks in practice? Check out our detailed walkthrough: **[Chasing the Perfect Corn: A Weekend Backcountry Saga with Ullr's Secret](example/arrange-weekend-bc-destination-n-timeline.md)**.
+
 ## Limitations & Known Variances (模型局限性与已知偏差)
 
 The Universal Radiative Model utilizes an Effective Temperature ($T_{eff}$) integral (ETDH/EFDH) to estimate snow phase transitions. **The model is highly accurate for its ideal baseline environment: wide-open, high-alpine bowls with clean snow (开阔、平坦、无遮挡且雪质干净的高海拔大坡).** In these ideal zones, solar radiation is uninterrupted and albedo is predictable. However, when moving away from these ideal conditions, the framework has inherent physical and environmental limitations that users must manually account for in the field.
