@@ -111,4 +111,39 @@ The final snow effective temperature combines the thermodynamic wet-bulb tempera
 T_{eff} = T_w + T_{SW,eq} + T_{LW,eq}
 \]
 
+\section{Snow Consolidation Physics}
+\subsection{Unit Dimensionality Conversion}
+The integrals of effective temperature calculated in the model are natively in Fahrenheit-hours (F-hrs). However, standard hydrological and physical coefficients for snow melt and ice growth expect Degree-Days Celsius ($^\circ\text{C-days}$). The conversion factor is:
+\[
+1 \text{ } ^\circ\text{C-day} = 1.8 \times 24 = 43.2 \text{ F-hrs}
+\]
+Thus, an integral $I_{\text{F-hrs}}$ is converted to $I_{\text{C-days}}$ via:
+\[
+I_{\text{C-days}} = \frac{I_{\text{F-hrs}}}{43.2}
+\]
+
+\subsection{Physical Density and Coefficients}
+Real snow density $\rho$ is calculated using Snow Water Equivalent (SWE, mm) and physical snow depth $h_0$ (cm):
+\[
+\rho = \frac{\text{SWE}/10}{h_0}
+\]
+The dynamic percolation coefficient $K_M$ (for melting) and freeze conductivity coefficient $K_F$ (for refreezing) are linearly scaled by the physical density:
+\begin{align*}
+K_M &= 2.0\rho + 0.1 \\
+K_F &= 10.0\rho + 0.5
+\end{align*}
+
+\subsection{Melt and Refreeze Depths}
+The physical melt depth $D_{melt}$ (in cm) follows the Degree-Day Method:
+\[
+D_{melt} = K_M \cdot I_{m,\text{C-days}}
+\]
+where $I_{m,\text{C-days}}$ is the melt integral ($T_{eff} > 32^\circ\text{F}$) converted to Degree-Days Celsius.
+
+The physical refreeze depth $D_{freeze}$ (in cm) representing crust thickness follows a generalized Stefan Phase Change Equation:
+\[
+D_{freeze} = K_F \sqrt{I_{f,\text{C-days}}}
+\]
+where $I_{f,\text{C-days}}$ is the absolute freeze integral ($T_{eff} < 32^\circ\text{F}$) converted to Degree-Days Celsius.
+
 \end{document}

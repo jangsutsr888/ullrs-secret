@@ -112,4 +112,39 @@ T_{LW,eq} = \frac{LW_{net}}{K_{rad}}
 T_{eff} = T_w + T_{SW,eq} + T_{LW,eq}
 \]
 
+\section{雪层冻融物理模型 (Snow Consolidation Physics)}
+\subsection{量纲转换}
+模型中积分计算得出的有效积温单位为华氏度-小时 (F-hrs)。然而，标准的冰川水文学融化因子和物理结冰常数所适用的单位均为摄氏度-天 ($^\circ\text{C-days}$)。量纲转换常数为：
+\[
+1 \text{ } ^\circ\text{C-day} = 1.8 \times 24 = 43.2 \text{ F-hrs}
+\]
+因此，华氏度-小时积分 $I_{\text{F-hrs}}$ 转换为摄氏度-天积温 $I_{\text{C-days}}$ 的公式为：
+\[
+I_{\text{C-days}} = \frac{I_{\text{F-hrs}}}{43.2}
+\]
+
+\subsection{物理密度与热传导系数}
+实际雪密度 $\rho$ 由雪水当量 (SWE, mm) 与实际物理雪深 $h_0$ (cm) 计算得出：
+\[
+\rho = \frac{\text{SWE}/10}{h_0}
+\]
+动态渗透融化系数 $K_M$ 与复冻热传导系数 $K_F$ 是基于真实密度的线性插值函数：
+\begin{align*}
+K_M &= 2.0\rho + 0.1 \\
+K_F &= 10.0\rho + 0.5
+\end{align*}
+
+\subsection{融雪与复冻深度}
+物理融雪深度 $D_{melt}$ (cm) 的计算基于度日融雪模型 (Degree-Day Method)：
+\[
+D_{melt} = K_M \cdot I_{m,\text{C-days}}
+\]
+其中 $I_{m,\text{C-days}}$ 为融化积分 ($T_{eff} > 32^\circ\text{F}$) 转换后的摄氏度-天。
+
+物理复冻深度（即硬壳厚度）$D_{freeze}$ (cm) 的计算基于斯特凡相变方程 (Stefan Equation)：
+\[
+D_{freeze} = K_F \sqrt{I_{f,\text{C-days}}}
+\]
+其中 $I_{f,\text{C-days}}$ 为复冻积分绝对值 ($T_{eff} < 32^\circ\text{F}$) 转换后的摄氏度-天。
+
 \end{document}

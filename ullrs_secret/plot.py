@@ -4,6 +4,7 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pytz
 
+from .core import get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth
 from .plot_utils import (
     PT_ZONE,
     compute_segment_integral,
@@ -22,6 +23,9 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
                            slope_deg=0.0, aspect_deg=180.0):
     """Generate the effective temperature forecast chart with melt/freeze integral annotations."""
     fig, ax = plt.subplots(figsize=(20, 7))
+
+    # Assume typical spring snow (density ~0.35) for depth annotations
+    K_M, K_F = get_consolidation_coefficients(0.35)
 
     valid_data = [(t, e) for t, e in zip(times, effective_temps) if e is not None]
 
@@ -49,22 +53,24 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
 
             if integral > 0.5:
                 if is_melt:
+                    d_melt = calculate_melt_depth(integral, K_M)
                     ax.fill_between(
                         seg_times, seg_vals, 32, color="red", alpha=0.15, zorder=1
                     )
                     ax.text(
-                        mid_time, 0.96, f"melting\n+{integral:.1f}",
+                        mid_time, 0.96, f"melting\n+{integral:.1f}\n{d_melt:.2f} cm",
                         transform=trans, color="darkred", ha="center", va="top",
                         fontsize=12, fontweight="bold",
                         bbox=dict(facecolor="white", alpha=0.6, edgecolor="none", pad=2),
                         zorder=6,
                     )
                 else:
+                    d_freeze = calculate_freeze_depth(integral, K_F)
                     ax.fill_between(
                         seg_times, seg_vals, 32, color="dodgerblue", alpha=0.15, zorder=1
                     )
                     ax.text(
-                        mid_time, 0.04, f"freezing\n-{integral:.1f}",
+                        mid_time, 0.04, f"freezing\n-{integral:.1f}\n{d_freeze:.2f} cm",
                         transform=trans, color="darkblue", ha="center", va="bottom",
                         fontsize=12, fontweight="bold",
                         bbox=dict(facecolor="white", alpha=0.6, edgecolor="none", pad=2),

@@ -182,3 +182,30 @@ def effective_temperature_f(t_wet_f, t_air_f, t_dew_f, cloud_pct, lat, lon, dt_a
     )
 
     return t_wet_f + t_sw_eq + t_lw_eq
+
+def calculate_snow_density(swe_mm, h0_snow_cm):
+    """Calculate realistic snow density from SWE and physical depth."""
+    if h0_snow_cm <= 0:
+        return 0.05
+    real_density = (swe_mm / 10.0) / h0_snow_cm
+    return max(0.05, min(0.60, real_density))
+
+def get_consolidation_coefficients(real_density):
+    """Return dynamic percolation (K_M) and freeze conductivity (K_F) coefficients based on density."""
+    K_M = (real_density * 2.0) + 0.1
+    K_F = (real_density * 10.0) + 0.5
+    return K_M, K_F
+
+def fhrs_to_c_days(fhrs):
+    """Convert degree-hours Fahrenheit to degree-days Celsius."""
+    return fhrs / (1.8 * 24.0)
+
+def calculate_melt_depth(im_fhrs, K_M):
+    """Calculate physical melt depth (cm) from melt integral (F-hrs)."""
+    return K_M * fhrs_to_c_days(im_fhrs)
+
+def calculate_freeze_depth(if_fhrs, K_F):
+    """Calculate physical freeze depth (cm) from freeze integral (F-hrs)."""
+    if if_fhrs <= 0:
+        return 0.0
+    return K_F * math.sqrt(fhrs_to_c_days(if_fhrs))

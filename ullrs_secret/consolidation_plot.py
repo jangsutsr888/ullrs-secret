@@ -38,19 +38,13 @@ def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_sno
     segments, crossing_times = find_crossings_and_segments(v_times, v_effs)
 
     # --- 2. Calculate Integrals & Dynamic Thermodynamic Model ---
+    from .core import calculate_snow_density, get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth
 
     # Calculate real physical density (water is 1.0)
-    # SWE (mm) / 10 = SWE (cm). Density = SWE (cm) / Depth (cm)
-    real_density = (swe_mm / 10.0) / h0_snow_cm
-
-    # Constrain density to realistic snow bounds (5% to 60%)
-    real_density = max(0.05, min(0.60, real_density))
+    real_density = calculate_snow_density(swe_mm, h0_snow_cm)
 
     # Continuous functions for coefficients based on density
-    # e.g., Density 0.10 (Dry) -> K_M ~0.3, K_F ~1.5
-    # e.g., Density 0.35 (Wet) -> K_M ~0.8, K_F ~4.0
-    K_M = (real_density * 2.0) + 0.1
-    K_F = (real_density * 10.0) + 0.5
+    K_M, K_F = get_consolidation_coefficients(real_density)
 
     current_Im = 0.0
     current_If = 0.0
@@ -73,9 +67,8 @@ def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_sno
 
         if is_melt:
             if current_If > 0:
-                M_eff = current_Im
-                D_melt = K_M * M_eff
-                D_freeze = K_F * math.sqrt(current_If)
+                D_melt = calculate_melt_depth(current_Im, K_M)
+                D_freeze = calculate_freeze_depth(current_If, K_F)
 
                 # ===== FIXED: Two-State (Crust / Wet Layer) Mass Balance =====
                 # 1. Melt phase: daytime heat first attacks existing crust, turning it into wet snow
@@ -92,7 +85,7 @@ def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_sno
                 if current_Im > 0 and current_If < (current_Im * 0.7):
                     # FIX: Dimensionality - Convert energy deficit to physical depth using K_M
                     energy_deficit = (current_Im * 0.7) - current_If
-                    degradation = K_M * energy_deficit * 0.5
+                    degradation = calculate_melt_depth(energy_deficit, K_M) * 0.5
                     
                     current_d_total -= degradation
                     current_d_total = max(0, current_d_total)
@@ -126,7 +119,7 @@ def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_sno
             # becomes saturated with liquid water and rapidly collapses.
             if current_Im > 120.0 and current_d_total > 0:
                 # FIX: Dimensionality - Use K_M to convert integral step to depth
-                current_d_total -= (K_M * integral * 0.2)
+                current_d_total -= calculate_melt_depth(integral, K_M) * 0.2
                 current_d_total = max(0, current_d_total)
 
                 # Real-time recording of the decline in supportability during the daytime heat
