@@ -11,8 +11,33 @@ Let's dive into how I used `ullrs-secret` to ruthlessly over-analyze the weather
 ## Step 0: The Secret Sauce (Getting the Data)
 
 Before we start obsessing over graphs, how do we actually get the weather data? It's simple:
-1. Head over to [forecast.weather.gov](https://forecast.weather.gov) and click on your exact target slope on the map.
-2. TODO: write steps here with screenshots
+1. Start at the NWS base page ([forecast.weather.gov](https://forecast.weather.gov)), and input your target location into the local forecast search box.
+
+   ![NWS Base Page](./nws-base-page.png)
+
+2. On the resulting details page, scroll down and click on **Hourly Weather Forecast** to enter the data page.
+
+   ![NWS Details Page](./nws-details-page.png)
+
+3. Once you are on the Hourly Weather Forecast data page, locate and click the orange **XML** button near the top right.
+
+   ![NWS Data Page](./nws-data-page.png)
+
+4. This opens the raw XML data view. Copy the URL directly from your browser's address bar.
+
+   ![NWS XML Page](./nws-xml-page.png)
+
+5. Open your terminal and use the `ullrs-secret import` command to fetch this raw data into a local JSON file:
+   ```bash
+   ullrs-secret import nws "<YOUR_COPIED_XML_URL>"
+   ```
+
+6. Before plotting, you need the vitals for your specific line. Tap into your past experience, dig through recent trip reports, or use mapping apps like onX Backcountry to pinpoint the exact elevation range, slope angle, and aspect of the face you want to ski.
+
+7. Finally, feed those precise parameters into `ullrs-secret plot` to generate your predictive analysis chart:
+   ```bash
+   ullrs-secret plot --elevation 8730 --slope 35 --aspect 180 weather_data.json
+   ```
 
 Now, onto the daily emotional rollercoaster.
 
@@ -94,5 +119,3 @@ Taking one final look at the charts for tomorrow, the Nisqually corn window was 
 Just for old time's sake, I peeked at Inter Glacier. The new forecast showed an 11:00 AM to 12:00 PM window. Sure, it looked okay, but remember those extra 2,000 feet of elevation gain? Yeah, no thanks. 
 
 I'm sticking to the relaxing plan. Nisqually Chute, here I come.
-
-TODO: add actual snow condition vid.
