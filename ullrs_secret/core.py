@@ -209,3 +209,25 @@ def calculate_freeze_depth(if_fhrs, K_F):
     if if_fhrs <= 0:
         return 0.0
     return K_F * math.sqrt(fhrs_to_c_days(if_fhrs))
+
+def calculate_dynamic_corn_window(real_density):
+    """Calculate dynamic corn window thresholds based on snow density.
+    
+    Args:
+        real_density (float): Estimated physical snow density (e.g., 0.35 for typical spring snow, 0.50 for firn).
+        
+    Returns:
+        tuple: (min_fhrs, max_fhrs) representing the dynamic corn window thresholds.
+    """
+    # Start: Energy required to overcome cold content (EFDH) and albedo.
+    min_fhrs = 133.33 * real_density + 13.34
+    
+    # End: Energy capacity before structural collapse. 
+    # Based on max allowable melt depth D_max(rho) = 9.27 * rho - 1.58
+    # and melt coefficient K_M(rho) = 2.0 * rho + 0.1
+    # Max F-hrs = D_max * 43.2 / K_M
+    d_max = 9.27 * real_density - 1.58
+    k_m = (real_density * 2.0) + 0.1
+    max_fhrs = (d_max * 43.2) / k_m if k_m > 0 else 90.0
+    
+    return min_fhrs, max_fhrs

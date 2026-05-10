@@ -45,9 +45,10 @@ def consolidation_plot(file, start, end, swe, depth, slope, aspect, elevation):
 @click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat).")
 @click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).")
 @click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation).")
-def plot(file, start, end, slope, aspect, elevation):
+@click.option("--density", type=float, default=0.5, help="Estimated snow density (e.g. 0.35 for typical spring snow, 0.50 for firn).")
+def plot(file, start, end, slope, aspect, elevation, density):
     """Read standard JSON, compute effective temps, generate chart and CSV."""
-    run_plot(file, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation)
+    run_plot(file, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation, snow_density=density)
 
 
 # --- auto-register importer subcommands ---

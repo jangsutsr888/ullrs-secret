@@ -147,4 +147,34 @@ D_{freeze} = K_F \sqrt{I_{f,\text{C-days}}}
 \]
 其中 $I_{f,\text{C-days}}$ 为复冻积分绝对值 ($T_{eff} < 32^\circ\text{F}$) 转换后的摄氏度-天。
 
+\section{动态 Corn 雪窗口模型 (Dynamic Corn Window Model)}
+\subsection{热力学容量与密度}
+完美 Corn 雪的滑行窗口（用华氏度-小时 F-hrs 的累积热量积分表示）被动态建模为物理雪密度 $\rho$ 的函数。
+
+\subsubsection*{起始阈值 (克服冷能)}
+密度越高的雪，其热容量和导热率越高，这意味着它在夜间会储存更多的“冷能”。在表面层达到等温融化状态之前，需要吸收更多的热量。起始所需的最小积分基于以下两个经验边界进行线性插值：
+\begin{itemize}
+    \item $\rho = 0.35$ (典型春雪) 需要 $60$ F-hrs。
+    \item $\rho = 0.50$ (高海拔高密度粒雪) 需要 $80$ F-hrs。
+\end{itemize}
+由此得出线性关系：
+\[
+I_{start}(\rho) = 60 + \frac{80 - 60}{0.50 - 0.35} (\rho - 0.35) = 133.33 \rho + 13.34
+\]
+
+\subsubsection*{结束阈值 (结构承载力极限)}
+密度越高的雪具有更强的结构承载力，能够承受更深的表面融化层而不至于崩溃成无法滑行的烂泥。我们基于以下经验边界，通过线性插值定义最大容许融化深度 $D_{max}$ (cm)：
+\begin{itemize}
+    \item $\rho = 0.35$ 容许的最大融化深度为 $1.66$ cm (对应原模型的 $90$ F-hrs)。
+    \item $\rho = 0.50$ 容许的最大融化深度为 $3.05$ cm (对应实地观测的 $120$ F-hrs)。
+\end{itemize}
+最大容许融化深度公式为：
+\[
+D_{max}(\rho) = 1.66 + \frac{3.05 - 1.66}{0.50 - 0.35} (\rho - 0.35) = 9.27 \rho - 1.58
+\]
+令物理融雪深度 $D_{melt} = D_{max}(\rho)$，并对度日模型方程进行逆向推导，可得出最大容许热量积分：
+\[
+I_{end}(\rho) = \frac{D_{max}(\rho) \times 43.2}{K_M(\rho)} = \frac{(9.27 \rho - 1.58) \times 43.2}{2.0\rho + 0.1}
+\]
+
 \end{document}

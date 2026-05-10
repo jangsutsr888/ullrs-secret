@@ -4,7 +4,7 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pytz
 
-from .core import get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth
+from .core import get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth, calculate_dynamic_corn_window
 from .plot_utils import (
     PT_ZONE,
     compute_segment_integral,
@@ -13,19 +13,16 @@ from .plot_utils import (
     prepare_effective_temp_data,
 )
 
-# Prime corn snow window: cumulative melt integral (F-hrs) within a single melt
-# portion where the surface is soft enough to ski but still has a supportable base.
-CORN_WINDOW_MIN_FHRS = 60.0
-CORN_WINDOW_MAX_FHRS = 90.0
-
 
 def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
-                           slope_deg=0.0, aspect_deg=180.0):
+                           slope_deg=0.0, aspect_deg=180.0, snow_density=0.5):
     """Generate the effective temperature forecast chart with melt/freeze integral annotations."""
     fig, ax = plt.subplots(figsize=(20, 7))
 
     # Assume typical spring snow (density ~0.35) for depth annotations
-    K_M, K_F = get_consolidation_coefficients(0.35)
+    K_M, K_F = get_consolidation_coefficients(snow_density)
+    
+    min_fhrs, max_fhrs = calculate_dynamic_corn_window(snow_density)
 
     valid_data = [(t, e) for t, e in zip(times, effective_temps) if e is not None]
 
@@ -77,7 +74,7 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
                         zorder=6,
                     )
 
-            if is_melt and integral >= CORN_WINDOW_MIN_FHRS:
+            if is_melt and integral >= min_fhrs:
                 cumulative_melt = 0.0
                 zone_times = []
                 zone_vals = []
@@ -88,26 +85,26 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
                     prev_cum = cumulative_melt
                     cumulative_melt += incr
 
-                    if prev_cum < CORN_WINDOW_MIN_FHRS and cumulative_melt >= CORN_WINDOW_MIN_FHRS:
-                        frac = (CORN_WINDOW_MIN_FHRS - prev_cum) / incr if incr > 0 else 0
+                    if prev_cum < min_fhrs and cumulative_melt >= min_fhrs:
+                        frac = (min_fhrs - prev_cum) / incr if incr > 0 else 0
                         t_cross = seg_times[i] + (seg_times[i + 1] - seg_times[i]) * frac
                         v_cross = seg_vals[i] + (seg_vals[i + 1] - seg_vals[i]) * frac
                         zone_times.append(t_cross)
                         zone_vals.append(v_cross)
 
-                    if cumulative_melt >= CORN_WINDOW_MAX_FHRS:
-                        frac = (CORN_WINDOW_MAX_FHRS - prev_cum) / incr if incr > 0 else 0
+                    if cumulative_melt >= max_fhrs:
+                        frac = (max_fhrs - prev_cum) / incr if incr > 0 else 0
                         t_cross = seg_times[i] + (seg_times[i + 1] - seg_times[i]) * frac
                         v_cross = seg_vals[i] + (seg_vals[i + 1] - seg_vals[i]) * frac
                         zone_times.append(t_cross)
                         zone_vals.append(v_cross)
                         break
 
-                    if cumulative_melt >= CORN_WINDOW_MIN_FHRS:
+                    if cumulative_melt >= min_fhrs:
                         zone_times.append(seg_times[i + 1])
                         zone_vals.append(seg_vals[i + 1])
 
-                if cumulative_melt < CORN_WINDOW_MAX_FHRS and len(zone_times) >= 2:
+                if cumulative_melt < max_fhrs and len(zone_times) >= 2:
                     zone_times.append(seg_times[-1])
                     zone_vals.append(seg_vals[-1])
 
@@ -117,7 +114,7 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
         for idx, (zone_t, zone_v) in enumerate(corn_zones):
             ax.fill_between(
                 zone_t, zone_v, 32, color="green", alpha=0.3, zorder=2,
-                label=f"Prime Corn Window ({CORN_WINDOW_MIN_FHRS:.0f}-{CORN_WINDOW_MAX_FHRS:.0f} F-hrs)" if idx == 0 else None,
+                label=f"Prime Corn Window ({min_fhrs:.0f}-{max_fhrs:.0f} F-hrs)" if idx == 0 else None,
             )
 
         for ct in crossing_times:
@@ -169,30 +166,30 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
     ax.legend(loc="upper left", bbox_to_anchor=(0, -0.25), fontsize=12, frameon=True)
 
     manual_content = (
-        "Effective Temperature Reference Manual (Universal Radiative Model)\n"
-        "----------------------------------------------------------------------------------------------------------------------\n"
-        "  Effective Temp = Wet Bulb + Shortwave Radiative Equiv (+T) + Longwave Radiative Equiv (-T)\n"
-        "  * NOTE: This model explicitly calculates slope/aspect. Thresholds below apply universally to ANY slope.\n"
-        "----------------------------------------------------------------------------------------------------------------------\n"
-        "[Phase 1: Powder Preservation (Dry Snow)]\n"
-        " * Pristine Powder (Daily): Daily ETDH < 15 F-hrs. (Minimal energy to maintain crystal structure)\n"
-        " * Powder Recovery Check (Nightly): \n"
-        "    - Must meet EFDH > 30 F-hrs AND EFDH > 0.8 * Prev_Day_ETDH to prevent settlement.\n"
-        " * Settlement / Getting Heavy: Daily ETDH 20 ~ 40 F-hrs. (Snow begins to round and densify)\n"
-        "----------------------------------------------------------------------------------------------------------------------\n"
-        "[Phase 2: The Corn Cycle (Melt-Freeze)]\n"
-        " * Crust Break-through: Daily ETDH 40 ~ 60 F-hrs. (DANGEROUS: Weak surface, 'breakable' crust, high ACL risk)\n"
-        " * PRIME CORN WINDOW: Daily ETDH 60 ~ 90 F-hrs. (Perfect 2-3cm soft surface over supportable base)\n"
-        " * Sticky/Grabby (Overcooked): Daily ETDH 100 ~ 130 F-hrs. (Deep melt, suction effect, high drag)\n"
-        "----------------------------------------------------------------------------------------------------------------------\n"
-        "[Phase 3: Danger & Reset Protocol (Isothermal/Wet)]\n"
-        " * Wet Avalanche Warning: Daily ETDH > 150 F-hrs. (Water percolating deep into snowpack)\n"
-        " * Overnight Reset Requirements (to clear heat debt):\n"
-        "    - Poor Reset (Supportable? No): Night EFDH < 60 F-hrs. (Surface may refreeze, but base remains unstable)\n"
-        "    - Full Reset (Structure Restored): Night EFDH 100 ~ 150 F-hrs.\n"
-        "    - Energy Deficit Alert: Night EFDH must be >= 0.7 * Previous Day ETDH for slope stabilization.\n"
-        "----------------------------------------------------------------------------------------------------------------------\n"
-        "Note: ETDH = Melt Integral (T_eff > 32 F)  |  EFDH = Freeze Integral (T_eff < 32 F, absolute value)\n"
+        f"Effective Temperature Reference Manual (Universal Radiative Model)\n"
+        f"----------------------------------------------------------------------------------------------------------------------\n"
+        f"  Effective Temp = Wet Bulb + Shortwave Radiative Equiv (+T) + Longwave Radiative Equiv (-T)\n"
+        f"  * NOTE: This model explicitly calculates slope/aspect. Thresholds below apply universally to ANY slope.\n"
+        f"----------------------------------------------------------------------------------------------------------------------\n"
+        f"[Phase 1: Powder Preservation (Dry Snow)]\n"
+        f" * Pristine Powder (Daily): Daily ETDH < 15 F-hrs. (Minimal energy to maintain crystal structure)\n"
+        f" * Powder Recovery Check (Nightly): \n"
+        f"    - Must meet EFDH > 30 F-hrs AND EFDH > 0.8 * Prev_Day_ETDH to prevent settlement.\n"
+        f" * Settlement / Getting Heavy: Daily ETDH 20 ~ 40 F-hrs. (Snow begins to round and densify)\n"
+        f"----------------------------------------------------------------------------------------------------------------------\n"
+        f"[Phase 2: The Corn Cycle (Melt-Freeze)]\n"
+        f" * Crust Break-through: Daily ETDH 40 ~ {min_fhrs:.0f} F-hrs. (DANGEROUS: Weak surface, 'breakable' crust, high ACL risk)\n"
+        f" * PRIME CORN WINDOW: Daily ETDH {min_fhrs:.0f} ~ {max_fhrs:.0f} F-hrs. (Perfect 2-3cm soft surface over supportable base)\n"
+        f" * Sticky/Grabby (Overcooked): Daily ETDH {max_fhrs + 10:.0f} ~ {max_fhrs + 40:.0f} F-hrs. (Deep melt, suction effect, high drag)\n"
+        f"----------------------------------------------------------------------------------------------------------------------\n"
+        f"[Phase 3: Danger & Reset Protocol (Isothermal/Wet)]\n"
+        f" * Wet Avalanche Warning: Daily ETDH > {max_fhrs + 60:.0f} F-hrs. (Water percolating deep into snowpack)\n"
+        f" * Overnight Reset Requirements (to clear heat debt):\n"
+        f"    - Poor Reset (Supportable? No): Night EFDH < 60 F-hrs. (Surface may refreeze, but base remains unstable)\n"
+        f"    - Full Reset (Structure Restored): Night EFDH 100 ~ 150 F-hrs.\n"
+        f"    - Energy Deficit Alert: Night EFDH must be >= 0.7 * Previous Day ETDH for slope stabilization.\n"
+        f"----------------------------------------------------------------------------------------------------------------------\n"
+        f"Note: ETDH = Melt Integral (T_eff > 32 F)  |  EFDH = Freeze Integral (T_eff < 32 F, absolute value)\n"
     )
 
     fig.text(
@@ -206,7 +203,7 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
     return fig
 
 
-def run_plot(json_path, start_days=None, end_days=None, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None):
+def run_plot(json_path, start_days=None, end_days=None, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None, snow_density=0.5):
     """Load weather data, compute effective temps, generate chart and CSV."""
     elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = (
         prepare_effective_temp_data(json_path, start_days=start_days, end_days=end_days, slope_deg=slope_deg, aspect_deg=aspect_deg,
@@ -214,7 +211,7 @@ def run_plot(json_path, start_days=None, end_days=None, slope_deg=0.0, aspect_de
     )
 
     plot_effective_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
-                           slope_deg=slope_deg, aspect_deg=aspect_deg)
+                           slope_deg=slope_deg, aspect_deg=aspect_deg, snow_density=snow_density)
     export_forecast_csv(
         f_times, f_temps, f_rhs, adjusted_wbs, "effective_temp_data.csv",
         effective_temps=effective_temps,

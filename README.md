@@ -154,6 +154,8 @@ Options:
   --aspect FLOAT     Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).
   --elevation FLOAT  Target elevation in ft (adjusts from data source
                      elevation).
+  --density FLOAT    Estimated snow density (e.g. 0.35 for typical spring
+                     snow, 0.50 for firn).
   --help             Show this message and exit.
 ```
 
@@ -178,7 +180,11 @@ Chart saved to: effective_temp_chart.png
 Data saved to: effective_temp_data.csv
 ```
 
-The chart plots effective temperature as the primary curve with wet bulb as overlay, annotates each melt/freeze segment with its integral (F-hrs), and highlights the Prime Corn Window (60–90 F-hrs cumulative melt) in green. A built-in reference manual below the chart maps integral values to snow conditions:
+The chart plots effective temperature as the primary curve with wet bulb as overlay, annotates each melt/freeze segment with its integral (F-hrs), and highlights the Prime Corn Window in green. 
+
+**Dynamic Corn Window:** The timing and duration of the corn window are calculated dynamically based on the estimated physical snow density (`--density`, defaults to 0.5 for high-alpine firn). Denser snow (like late-spring volcano base) requires more initial heat to overcome its overnight "cold content" but can tolerate much higher total heat before its structure collapses. For example, a density of 0.35 yields a 60–90 F-hrs window, while a density of 0.50 stretches it to 80–120 F-hrs.
+
+A built-in reference manual below the chart maps integral values to snow conditions (baseline shown for 0.35 density):
 
 | Effective Melt Integral (ETDH) | Snow State |
 |-------------------------------|------------|

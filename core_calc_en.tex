@@ -146,4 +146,34 @@ D_{freeze} = K_F \sqrt{I_{f,\text{C-days}}}
 \]
 where $I_{f,\text{C-days}}$ is the absolute freeze integral ($T_{eff} < 32^\circ\text{F}$) converted to Degree-Days Celsius.
 
+\section{Dynamic Corn Window Model}
+\subsection{Thermodynamic Capacity and Density}
+The prime corn skiing window (represented by cumulative heat integrals in F-hrs) is dynamically modeled as a function of the physical snow density $\rho$.
+
+\subsubsection*{Start Threshold (Cold Content Overcome)}
+Denser snow has higher heat capacity and thermal conductivity, meaning it stores more overnight cold content. More energy is required to bring the surface layer to an isothermal melting state. The minimum required integral is modeled via linear interpolation based on two empirical boundaries:
+\begin{itemize}
+    \item $\rho = 0.35$ (typical spring snow) requires $60$ F-hrs.
+    \item $\rho = 0.50$ (high-alpine firn) requires $80$ F-hrs.
+\end{itemize}
+This gives the linear relationship:
+\[
+I_{start}(\rho) = 60 + \frac{80 - 60}{0.50 - 0.35} (\rho - 0.35) = 133.33 \rho + 13.34
+\]
+
+\subsubsection*{End Threshold (Structural Integrity Limit)}
+Denser snow has greater structural integrity and can tolerate a deeper melt layer without collapsing into unskiable slush. We define the maximum allowable melt depth $D_{max}$ (in cm) using linear interpolation based on the following empirical boundaries:
+\begin{itemize}
+    \item $\rho = 0.35$ supports a maximum melt depth of $1.66$ cm (corresponding to the standard $90$ F-hrs limit).
+    \item $\rho = 0.50$ supports a maximum melt depth of $3.05$ cm (corresponding to an observed $120$ F-hrs limit).
+\end{itemize}
+The maximum allowable depth is:
+\[
+D_{max}(\rho) = 1.66 + \frac{3.05 - 1.66}{0.50 - 0.35} (\rho - 0.35) = 9.27 \rho - 1.58
+\]
+Setting the physical melt depth $D_{melt} = D_{max}(\rho)$ and rearranging the Degree-Day equation gives the maximum allowable heat integral:
+\[
+I_{end}(\rho) = \frac{D_{max}(\rho) \times 43.2}{K_M(\rho)} = \frac{(9.27 \rho - 1.58) \times 43.2}{2.0\rho + 0.1}
+\]
+
 \end{document}
