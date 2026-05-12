@@ -135,7 +135,7 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
     lon_str = f"{abs(lon):.4f}°{'W' if lon < 0 else 'E'}" if lon is not None else "N/A"
 
     ax.set_title(
-        f"Hourly Effective Temp vs Wet Bulb Temp - Elev: {elevation_ft} ft\n"
+        f"Hourly Effective Temp vs Wet Bulb Temp - Elev: {elevation_ft} ft | Snow Density: {snow_density:.2f}\n"
         f"Location: {lat_str}, {lon_str} | Slope: {slope_deg:.0f}° {aspect_label} aspect | Timezone: US Pacific Time (PT)",
         fontsize=18,
     )
@@ -165,6 +165,10 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
     plt.subplots_adjust(bottom=0.52)
     ax.legend(loc="upper left", bbox_to_anchor=(0, -0.25), fontsize=12, frameon=True)
 
+    d_max_corn = calculate_melt_depth(max_fhrs, K_M)
+    d_poor_reset = calculate_freeze_depth(60, K_F)
+    d_full_reset = calculate_freeze_depth(100, K_F)
+
     manual_content = (
         f"Effective Temperature Reference Manual (Universal Radiative Model)\n"
         f"----------------------------------------------------------------------------------------------------------------------\n"
@@ -177,17 +181,17 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
         f"    - Must meet EFDH > 30 F-hrs AND EFDH > 0.8 * Prev_Day_ETDH to prevent settlement.\n"
         f" * Settlement / Getting Heavy: Daily ETDH 20 ~ 40 F-hrs. (Snow begins to round and densify)\n"
         f"----------------------------------------------------------------------------------------------------------------------\n"
-        f"[Phase 2: The Corn Cycle (Melt-Freeze)]\n"
+        f"[Phase 2: The Corn Cycle (Melt-Freeze)]  * Dynamically scaled for snow density {snow_density:.2f}\n"
         f" * Crust Break-through: Daily ETDH 40 ~ {min_fhrs:.0f} F-hrs. (DANGEROUS: Weak surface, 'breakable' crust, high ACL risk)\n"
-        f" * PRIME CORN WINDOW: Daily ETDH {min_fhrs:.0f} ~ {max_fhrs:.0f} F-hrs. (Perfect 2-3cm soft surface over supportable base)\n"
+        f" * PRIME CORN WINDOW: Daily ETDH {min_fhrs:.0f} ~ {max_fhrs:.0f} F-hrs. (Optimal melt depth up to {d_max_corn:.1f} cm)\n"
         f" * Sticky/Grabby (Overcooked): Daily ETDH {max_fhrs + 10:.0f} ~ {max_fhrs + 40:.0f} F-hrs. (Deep melt, suction effect, high drag)\n"
         f"----------------------------------------------------------------------------------------------------------------------\n"
         f"[Phase 3: Danger & Reset Protocol (Isothermal/Wet)]\n"
-        f" * Wet Avalanche Warning: Daily ETDH > {max_fhrs + 60:.0f} F-hrs. (Water percolating deep into snowpack)\n"
-        f" * Overnight Reset Requirements (to clear heat debt):\n"
-        f"    - Poor Reset (Supportable? No): Night EFDH < 60 F-hrs. (Surface may refreeze, but base remains unstable)\n"
-        f"    - Full Reset (Structure Restored): Night EFDH 100 ~ 150 F-hrs.\n"
-        f"    - Energy Deficit Alert: Night EFDH must be >= 0.7 * Previous Day ETDH for slope stabilization.\n"
+        f" * Overnight Reset Requirements (to clear heat debt & form crust):\n"
+        f"    - Poor Reset (Supportable? No): Night EFDH < 60 F-hrs. (Thin crust < {d_poor_reset:.1f} cm, base remains unstable)\n"
+        f"    - Full Reset (Structure Restored): Night EFDH > 100 F-hrs (Solid crust > {d_full_reset:.1f} cm).\n"
+        f"    - Structural Check: Freeze Depth MUST exceed previous day's Melt Depth to prevent Breakable Crust.\n"
+        f"    - Thermal Check: Night EFDH MUST be >= 0.7 * Previous Day ETDH to clear deep heat debt and prevent Wet Avalanches.\n"
         f"----------------------------------------------------------------------------------------------------------------------\n"
         f"Note: ETDH = Melt Integral (T_eff > 32 F)  |  EFDH = Freeze Integral (T_eff < 32 F, absolute value)\n"
     )

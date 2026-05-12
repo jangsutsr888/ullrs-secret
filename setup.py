@@ -16,6 +16,10 @@ setup(
         "pandas>=2.2",
         "scipy==1.13.1",
         "pytz>=2024.1",
+        "cdsapi",
+        "xarray",
+        "netCDF4",
+        "numpy",
     ],
     entry_points={
         "console_scripts": [

@@ -195,7 +195,9 @@ A built-in reference manual below the chart maps integral values to snow conditi
 | 100–130 F-hrs | Sticky/grabby, overcooked |
 | > 150 F-hrs | Wet avalanche warning |
 
-Overnight refreeze (EFDH) must reach at least 0.7× the previous day's melt integral for slope stabilization. Full structural reset requires 100–150 F-hrs of freeze.
+Overnight reset depends on both structural and thermal checks:
+- **Structural Check:** Freeze Depth MUST exceed the previous day's Melt Depth to prevent Breakable Crust.
+- **Thermal Check:** Night EFDH MUST be >= 0.7× the previous day's melt integral (ETDH) to clear deep heat debt and prevent Wet Avalanches.
 
 **Slope & aspect matter.** A 35° south-facing slope receives dramatically more solar energy than a flat surface or north-facing slope at the same elevation. Always match `--slope` and `--aspect` to the line you intend to ski — the corn window timing can shift by hours between aspects.
 
