@@ -11,3 +11,4 @@ weather_data.json
 *.csv
 downloaded_weather.xml
 /docs/*
+*.nc
