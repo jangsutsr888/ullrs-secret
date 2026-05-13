@@ -18,6 +18,17 @@ from .core import (
 PT_ZONE = pytz.timezone("America/Los_Angeles")
 
 
+def calculate_distance_miles(lat1, lon1, lat2, lon2):
+    """Calculate the straight-line distance between two points on Earth in miles."""
+    R = 3958.8  # Earth average radius in miles
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * \
+        math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return R * c
+
+
 def load_weather_data(json_path):
     """Load standard weather JSON into a dict of parsed arrays."""
     with open(json_path, "r", encoding="utf-8") as f:

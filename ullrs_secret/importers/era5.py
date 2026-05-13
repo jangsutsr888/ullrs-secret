@@ -30,16 +30,7 @@ import xarray as xr
 
 from . import register
 from .. import core
-
-
-def calculate_distance_miles(lat1, lon1, lat2, lon2):
-    R = 3958.8  # Earth average radius in miles
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * \
-        math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-    return R * c
+from ..plot_utils import calculate_distance_miles
 
 
 def _fetch_era5(lat, lon, start_date_str, end_date_str, tz_name):

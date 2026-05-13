@@ -1,12 +1,12 @@
 """NWS XML data importer."""
 
-import os
 import urllib.request
 import xml.etree.ElementTree as ET
 
 import click
 
 from . import register
+from ..plot_utils import calculate_distance_miles
 
 
 def _download(url):
@@ -18,13 +18,6 @@ def _download(url):
             return resp.read().decode("utf-8")
     except Exception as e:
         raise click.ClickException(f"Download failed: {e}")
-
-
-def _read_local(path):
-    if not os.path.exists(path):
-        raise click.ClickException(f"File not found: {path}")
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
 
 
 def _extract_values(parent, tag, attr_type, layout_key):
@@ -39,7 +32,7 @@ def _extract_values(parent, tag, attr_type, layout_key):
     return []
 
 
-def _parse_xml(xml_data):
+def _parse_xml(xml_data, input_lat, input_lon):
     xml_data = xml_data.replace("&lon=", "&amp;lon=").replace(
         "&FcstType=", "&amp;FcstType="
     )
@@ -51,6 +44,11 @@ def _parse_xml(xml_data):
     point_elem = root.find(".//location/point")
     latitude = float(point_elem.get("latitude")) if point_elem is not None else None
     longitude = float(point_elem.get("longitude")) if point_elem is not None else None
+
+    if latitude is not None and longitude is not None:
+        distance_miles = calculate_distance_miles(input_lat, input_lon, latitude, longitude)
+        click.echo(f"Matched nearest NWS grid point: Lat {latitude:.4f}, Lon {longitude:.4f}")
+        click.echo(f"Distance from input location: {distance_miles:.2f} miles")
 
     height_elem = root.find(".//location/height")
     elevation_ft = float(height_elem.text) if height_elem is not None else 0.0
@@ -91,15 +89,14 @@ def _parse_xml(xml_data):
 
 
 NWS_DECORATORS = [
-    click.argument("source"),
+    click.option("--lat", type=float, required=True, help="Latitude of the location (+ for North, - for South)"),
+    click.option("--lon", type=float, required=True, help="Longitude of the location (+ for East, - for West)"),
 ]
 
 
 @register("nws", decorators=NWS_DECORATORS)
-def fetch(source):
-    """Fetch and parse NWS weather data from a URL or local XML file path."""
-    if source.startswith(("http://", "https://")):
-        xml_data = _download(source)
-    else:
-        xml_data = _read_local(source)
-    return _parse_xml(xml_data)
+def fetch(lat, lon):
+    """Fetch and parse NWS weather data from the MapClick API."""
+    url = f"https://forecast.weather.gov/MapClick.php?lat={lat}&lon={lon}&FcstType=digitalDWML"
+    xml_data = _download(url)
+    return _parse_xml(xml_data, lat, lon)
