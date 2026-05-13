@@ -20,6 +20,7 @@ setup(
         "xarray",
         "netCDF4",
         "numpy",
+        "requests",
     ],
     entry_points={
         "console_scripts": [

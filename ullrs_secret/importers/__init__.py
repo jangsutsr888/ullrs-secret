@@ -44,3 +44,4 @@ def get_registry():
 
 from . import nws  # noqa: E402, F401
 from . import era5  # noqa: E402, F401
+from . import openmeteo  # noqa: E402, F401

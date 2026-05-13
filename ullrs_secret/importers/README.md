@@ -48,6 +48,39 @@ Options:
   --help               Show this message and exit.
 ```
 
+### Open-Meteo
+High-resolution 10-day forecast data utilizing multiple global and regional models (ECMWF, GFS, HRRR, etc.). Requires no authentication and automatically resolves the true grid coordinates and precise elevation via Open Topo Data.
+
+```bash
+$ ullrs-secret import openmeteo --help
+Usage: ullrs-secret import openmeteo [OPTIONS]
+
+  Fetch high-resolution forecast via Open-Meteo API.
+
+Options:
+  --lat FLOAT                     Latitude of the location (+ for North, - for
+                                  South)  [required]
+  --lon FLOAT                     Longitude of the location (+ for East, - for
+                                  West)  [required]
+  --model [best_match|ecmwf|gfs|gem|hrrr|nam]
+                                  Weather model to use. Default: best_match
+  --timezone TEXT                 Timezone (default: America/Los_Angeles)
+  -o, --output TEXT               Output JSON path.
+  --help                          Show this message and exit.
+```
+
+Example:
+```bash
+# High-resolution forecast for a location in the Alps
+$ ullrs-secret import openmeteo --lat 45.9765 --lon 7.6584 --model ecmwf
+Fetching forecast from Open-Meteo API (model: ecmwf_ifs04) for 45.9765, 7.6584...
+Matched nearest grid point: Lat 45.9500, Lon 7.6500
+Distance from input location: 1.88 miles
+Fetching accurate elevation for the grid point from Open Topo Data...
+Grid point elevation determined as 12450.5 ft
+Wrote 240 observations to weather_data.json
+```
+
 ## Standard Weather Data Format
 
 All importers produce the same JSON format. This is the contract between data sources and the plotting/calculation engine:
