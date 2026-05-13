@@ -51,6 +51,30 @@ def plot(file, start, end, slope, aspect, elevation, density):
     run_plot(file, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation, snow_density=density)
 
 
+# --- terrain command ---
+
+@cli.command("terrain")
+@click.option("--lat", type=float, required=True, help="Latitude of the location (+ for North, - for South)")
+@click.option("--lon", type=float, required=True, help="Longitude of the location (+ for East, - for West)")
+def terrain(lat, lon):
+    """Calculate elevation, slope, and aspect for a coordinate."""
+    from .terrain import get_terrain_data
+    
+    try:
+        data = get_terrain_data(lat, lon)
+        
+        ASPECT_LABELS = {0: "N", 45: "NE", 90: "E", 135: "SE", 180: "S", 225: "SW", 270: "W", 315: "NW", 360: "N"}
+        closest_cardinal = min(ASPECT_LABELS, key=lambda k: abs(k - data['aspect_deg'] % 360))
+        aspect_label = ASPECT_LABELS[closest_cardinal]
+
+        click.echo(f"Coordinates: {lat:.5f}, {lon:.5f}")
+        click.echo(f"Elevation:   {data['elevation_ft']:.1f} ft ({data['elevation_m']:.1f} m)")
+        click.echo(f"Slope:       {data['slope_deg']:.0f}°")
+        click.echo(f"Aspect:      {data['aspect_deg']:.0f}° {aspect_label}")
+    except Exception as e:
+        click.echo(f"Error fetching terrain data: {e}", err=True)
+
+
 # --- auto-register importer subcommands ---
 
 def _build_import_command(name, entry):
