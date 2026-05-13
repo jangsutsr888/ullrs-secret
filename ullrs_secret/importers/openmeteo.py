@@ -105,11 +105,10 @@ def _fetch_openmeteo(lat, lon, model, tz_name):
 # Map user-friendly names to Open-Meteo's API model strings
 MODEL_MAP = {
     "best_match": "best_match",
-    "ecmwf": "ecmwf_ifs04",
+    "ecmwf": "ecmwf_ifs025",
     "gfs": "gfs_seamless",
     "gem": "gem_seamless",
-    "hrrr": "hrrr_seamless",
-    "nam": "nam_seamless",
+    "hrrr": "gfs_hrrr",
 }
 
 OPENMETEO_DECORATORS = [

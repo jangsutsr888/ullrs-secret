@@ -62,7 +62,7 @@ Options:
                                   South)  [required]
   --lon FLOAT                     Longitude of the location (+ for East, - for
                                   West)  [required]
-  --model [best_match|ecmwf|gfs|gem|hrrr|nam]
+  --model [best_match|ecmwf|gfs|gem|hrrr]
                                   Weather model to use. Default: best_match
   --timezone TEXT                 Timezone (default: America/Los_Angeles)
   -o, --output TEXT               Output JSON path.
@@ -73,13 +73,22 @@ Example:
 ```bash
 # High-resolution forecast for a location in the Alps
 $ ullrs-secret import openmeteo --lat 45.9765 --lon 7.6584 --model ecmwf
-Fetching forecast from Open-Meteo API (model: ecmwf_ifs04) for 45.9765, 7.6584...
+Fetching forecast from Open-Meteo API (model: ecmwf_ifs025) for 45.9765, 7.6584...
 Matched nearest grid point: Lat 45.9500, Lon 7.6500
 Distance from input location: 1.88 miles
 Fetching accurate elevation for the grid point from Open Topo Data...
 Grid point elevation determined as 12450.5 ft
 Wrote 240 observations to weather_data.json
 ```
+
+#### Supported Open-Meteo Models
+| Model Name | CLI Option | Description | Forecast Days | Spatial Resolution | Time Resolution |
+|---|---|---|---|---|---|
+| **Best Match** | `best_match` | Seamlessly blends the highest resolution models available for the given location. | 10 days | ~3 km to 11 km | Hourly |
+| **ECMWF IFS** | `ecmwf` | Leading global model by the European Centre for Medium-Range Weather Forecasts. | 10 days | ~28 km (0.25°) | Hourly |
+| **NOAA GFS** | `gfs` | Global Forecast System. The primary US global weather model. | 10 days | ~13 km | Hourly |
+| **CMC GEM** | `gem` | Global Environmental Multiscale Model by the Canadian Meteorological Centre. | 10 days | ~15 km | Hourly |
+| **NOAA HRRR** | `hrrr` | High-Resolution Rapid Refresh. Extremely precise short-range model (North America only). | 48 hours | ~3 km | Hourly |
 
 ## Standard Weather Data Format
 
