@@ -107,35 +107,9 @@ Commands:
 
 ### Import weather data
 
-```
-$ ullrs-secret import --help
-Usage: ullrs-secret import [OPTIONS] COMMAND [ARGS]...
+The `import` command fetches weather data from various sources (e.g., NWS, ERA5) and converts it into a standard JSON format used by the core calculation engine. 
 
-  Import weather data from a source into standard JSON.
-
-Options:
-  --help  Show this message and exit.
-
-Commands:
-  nws  Fetch and parse NWS weather data from a URL or local XML file path.
-```
-
-```
-$ ullrs-secret import nws --help
-Usage: ullrs-secret import nws [OPTIONS] SOURCE
-
-  Fetch and parse NWS weather data from a URL or local XML file path.
-
-Options:
-  -o, --output TEXT  Output JSON path.
-  --help             Show this message and exit.
-```
-
-```
-# Weather data of Newton Clark Glacier of Mt Hood
-$ ullrs-secret import nws "https://forecast.weather.gov/MapClick.php?lat=45.3668&lon=-121.6867&FcstType=digitalDWML"
-Wrote 168 observations to weather_data.json
-```
+For detailed usage on available importers, the standard JSON format, and instructions on how to build your own importer, please see the [Importers Documentation](ullrs_secret/importers/README.md).
 
 ### Effective temperature forecast (primary command)
 
