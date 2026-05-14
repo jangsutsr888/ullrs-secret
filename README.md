@@ -137,20 +137,55 @@ Aspect:      135° SE
 
 ### SNOTEL data and snow inference
 
-The `snotel` command fetches historical Snow Depth and Snow Water Equivalent (SWE) data from the nearest automated station. It also computes snow density and can roughly infer the expected snow depth at your target elevation using a lapse rate.
+Fetching SNOTEL data is a two-step process: first, list nearby stations, and then query the desired station for snow data.
 
 * **Data Source:** [USDA NRCS AWDB API](https://wcc.sc.egov.usda.gov/awdbRestApi/swagger-ui/index.html) pulling directly from the SNOTEL (Snow Telemetry) network.
 * **Limitations:** SNOTEL stations are only available in the Western United States and Alaska. Inference logic applies a very simple base assumption (+10% depth per 1000 ft gained) which does not account for wind loading, localized orographic effects, or significant rain-shadows. It is a rough heuristic, not a guarantee.
+
+#### 1. Find nearby stations
+
+Use the `snotel-list` command to find the 5 nearest SNOTEL stations to your coordinates. This allows you to choose a higher-elevation station if the closest one has already melted out.
+
+```
+$ ullrs-secret snotel-list --help
+Usage: ullrs-secret snotel-list [OPTIONS]
+
+  List the 5 nearest SNOTEL stations to a given coordinate.
+
+Options:
+  --lat FLOAT  Latitude of the location (+ for North, - for South)  [required]
+  --lon FLOAT  Longitude of the location (+ for East, - for West)  [required]
+  --help       Show this message and exit.
+```
+
+Example:
+```
+$ ullrs-secret snotel-list --lat 48.48260 --lon -121.04877
+Top 5 nearest SNOTEL stations to (48.48260, -121.04877):
+Station Name              | Elevation  | Distance   | Direction  | Identifier
+--------------------------------------------------------------------------------
+Thunder Basin             | 4310 ft    | 4.1 mi     | NE         | 817:WA:SNTL
+Park Creek Ridge          | 4610 ft    | 6.6 mi     | ESE        | 681:WA:SNTL
+Swamp Creek               | 3930 ft    | 13.6 mi    | ENE        | 975:WA:SNTL
+Rainy Pass                | 4880 ft    | 14.5 mi    | E          | 711:WA:SNTL
+Lyman Lake                | 5990 ft    | 20.6 mi    | SSE        | 606:WA:SNTL
+
+Use 'ullrs-secret snotel --site "<Identifier or Name>"' to fetch data for a specific station.
+```
+
+#### 2. Fetch snow data
+
+The `snotel` command fetches historical Snow Depth, Snow Water Equivalent (SWE), daily snow, and daily density data for a specific station. It can also infer the expected snow depth at your target elevation.
 
 ```
 $ ullrs-secret snotel --help
 Usage: ullrs-secret snotel [OPTIONS]
 
-  Fetch nearest SNOTEL station data and infer snow depth at target elevation.
+  Fetch data for a specific SNOTEL station and infer snow depth at target elevation.
 
 Options:
-  --lat FLOAT        Latitude of the location (+ for North, - for South)  [required]
-  --lon FLOAT        Longitude of the location (+ for East, - for West)  [required]
+  --site TEXT        SNOTEL station name or identifier (e.g., 'Thunder
+                     Basin' or '817:WA:SNTL')  [required]
   --elevation FLOAT  Target elevation in ft for snow depth inference.
   --start TEXT       Start date (YYYY-MM-DD). Defaults to 7 days ago.
   --end TEXT         End date (YYYY-MM-DD). Defaults to today.
@@ -159,21 +194,22 @@ Options:
 
 Example:
 ```
-$ ullrs-secret snotel --lat 46.8523 --lon -121.7603 --elevation 8000
-Nearest SNOTEL Station: Paradise (679:WA:SNTL)
-  Location:  46.78266, -121.74767 (4.8 miles away)
-  Elevation: 5150 ft
+$ ullrs-secret snotel --site "Lyman Lake" --elevation 7000
+SNOTEL Station: Lyman Lake (606:WA:SNTL)
+  Elevation: 5990 ft
 
-Data from 2026-05-01 to 2026-05-08:
-Date         | Depth (cm)   | SWE (mm)     | Density     
----------------------------------------------------------
-2026-05-01   | 177.8        | 922.0        | 0.52        
+Data from 2026-05-07 to 2026-05-14:
+Date         | Depth (cm)   | SWE (mm)     | Density      | 24h Snow (cm)   | 24h Density 
+-------------------------------------------------------------------------------------
+2026-05-07   | 170.2        | 759.5        | 0.45         | 0.0             | -           
+2026-05-08   | 165.1        | 734.1        | 0.44         | 0.0             | -           
 ...
+2026-05-13   | 144.8        | 629.9        | 0.44         | 5.1             | 0.00        
 
-Snow Level Inference at 8000 ft:
-  Elevation Difference: +2850 ft
-  Latest SNOTEL Depth (2026-05-08): 127.0 cm
-  Inferred Target Depth (approx. 10%/1000ft): 163.2 cm
+Snow Level Inference at 7000 ft:
+  Elevation Difference: +1010 ft
+  Latest SNOTEL Depth (2026-05-13): 144.8 cm
+  Inferred Target Depth (approx. 10%/1000ft): 159.4 cm
 ```
 
 ### Import weather data

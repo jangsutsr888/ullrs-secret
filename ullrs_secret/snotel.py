@@ -7,17 +7,33 @@ from datetime import datetime, timedelta
 
 def haversine_distance(lat1, lon1, lat2, lon2):
     """Calculate the great circle distance in miles between two points on the earth."""
-    # radius of earth in miles
     r = 3958.8
     p = math.pi / 180
     a = 0.5 - math.cos((lat2 - lat1) * p) / 2 + math.cos(lat1 * p) * math.cos(lat2 * p) * (1 - math.cos((lon2 - lon1) * p)) / 2
     return 2 * r * math.asin(math.sqrt(a))
 
-def find_nearest_snotel(lat, lon, bbox_deg=2.0):
+def calculate_bearing(lat1, lon1, lat2, lon2):
+    """Calculate the compass bearing from point 1 to point 2."""
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    diff_lon_rad = math.radians(lon2 - lon1)
+    
+    x = math.sin(diff_lon_rad) * math.cos(lat2_rad)
+    y = math.cos(lat1_rad) * math.sin(lat2_rad) - (math.sin(lat1_rad) * math.cos(lat2_rad) * math.cos(diff_lon_rad))
+    
+    initial_bearing = math.atan2(x, y)
+    initial_bearing = math.degrees(initial_bearing)
+    compass_bearing = (initial_bearing + 360) % 360
+    
+    # Convert to cardinal direction
+    dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+    ix = round(compass_bearing / (360. / 16.))
+    return dirs[ix % 16]
+
+def find_nearest_snotel_stations(lat, lon, count=5, bbox_deg=2.0):
     """
-    Finds the nearest SNOTEL station within a bounding box.
+    Finds the nearest SNOTEL stations within a bounding box.
     """
-    # Define bounding box
     min_lat = lat - bbox_deg
     max_lat = lat + bbox_deg
     min_lon = lon - bbox_deg
@@ -32,11 +48,9 @@ def find_nearest_snotel(lat, lon, bbox_deg=2.0):
     if not stations:
         raise ValueError(f"No SNOTEL stations found within +/- {bbox_deg} degrees of {lat}, {lon}.")
 
-    nearest_station = None
-    min_dist = float('inf')
+    valid_stations = []
 
     for meta in stations:
-        # The AWDB API sometimes returns other network stations even when filtering by SNTL
         if meta.get('networkCode') != 'SNTL':
             continue
 
@@ -46,15 +60,37 @@ def find_nearest_snotel(lat, lon, bbox_deg=2.0):
             continue
             
         dist = haversine_distance(lat, lon, st_lat, st_lon)
-        if dist < min_dist:
-            min_dist = dist
-            nearest_station = meta
-            nearest_station['distance_miles'] = dist
+        bearing = calculate_bearing(lat, lon, st_lat, st_lon)
+        meta['distance_miles'] = dist
+        meta['direction'] = bearing
+        valid_stations.append(meta)
             
-    if not nearest_station:
-        raise ValueError("Could not determine the nearest SNOTEL station.")
+    if not valid_stations:
+        raise ValueError("Could not determine any nearby SNOTEL stations.")
         
-    return nearest_station
+    valid_stations.sort(key=lambda x: x['distance_miles'])
+    return valid_stations[:count]
+
+def get_station_by_identifier(identifier):
+    """Finds a station by its triplet or name."""
+    # If it looks like a triplet
+    if ":" in identifier:
+        url = f"https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?stationTriplets={identifier}"
+        response = requests.get(url, headers={"accept": "application/json"})
+        if response.status_code == 200 and response.json():
+            return response.json()[0]
+            
+    # Fallback to fetching all SNTL stations and matching by name
+    url = "https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?activeOnly=true&networks=SNTL"
+    response = requests.get(url, headers={"accept": "application/json"})
+    response.raise_for_status()
+    stations = response.json()
+    
+    for meta in stations:
+        if meta.get('name', '').lower() == identifier.lower():
+            return meta
+            
+    raise ValueError(f"Could not find a SNOTEL station matching '{identifier}'.")
 
 def fetch_snotel_data(station_triplet, start_date_str, end_date_str):
     """
@@ -66,7 +102,6 @@ def fetch_snotel_data(station_triplet, start_date_str, end_date_str):
     response.raise_for_status()
     data = response.json()
     
-    # Process the data into a usable format
     results = {}
     if not data or len(data) == 0:
         return results
@@ -90,9 +125,9 @@ def fetch_snotel_data(station_triplet, start_date_str, end_date_str):
             
     return results
 
-def get_snotel_report(target_lat, target_lon, target_elev_ft=None, start_date=None, end_date=None):
+def get_snotel_report(identifier, target_elev_ft=None, start_date=None, end_date=None):
     """
-    Full pipeline to get and process SNOTEL data for a location.
+    Full pipeline to get and process SNOTEL data for a specific station.
     """
     if not end_date:
         end_date = datetime.now()
@@ -102,12 +137,16 @@ def get_snotel_report(target_lat, target_lon, target_elev_ft=None, start_date=No
     start_str = start_date.strftime("%Y-%m-%d")
     end_str = end_date.strftime("%Y-%m-%d")
     
-    station_meta = find_nearest_snotel(target_lat, target_lon)
+    # Fetch from 1 day earlier to calculate 24h deltas for the first date
+    fetch_start_date = start_date - timedelta(days=1)
+    fetch_start_str = fetch_start_date.strftime("%Y-%m-%d")
+    
+    station_meta = get_station_by_identifier(identifier)
     station_triplet = station_meta['stationTriplet']
     
     station_elev_ft = station_meta.get('elevation')
     
-    data = fetch_snotel_data(station_triplet, start_str, end_str)
+    data = fetch_snotel_data(station_triplet, fetch_start_str, end_str)
     
     return {
         "station": station_meta,
