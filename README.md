@@ -101,8 +101,79 @@ Options:
 
 Commands:
   consolidation-plot  Compute melt-freeze consolidation model and plot...
-  plot                Read standard JSON, compute effective temps,...
   import              Import weather data from a source into standard JSON.
+  plot                Read standard JSON, compute effective temps,...
+  snotel              Fetch nearest SNOTEL station data and infer snow...
+  terrain             Calculate elevation, slope, and aspect for a...
+```
+
+### Terrain calculations
+
+The `terrain` command calculates the elevation, slope, and aspect for a specific geographic coordinate.
+
+* **Data Source:** [Open Topo Data API](https://www.opentopodata.org/) using the SRTM30M dataset (Shuttle Radar Topography Mission, ~30-meter resolution).
+* **Limitations:** The 30m resolution smooths over micro-terrain. A narrow couloir or small cliff band will not be accurately represented in the calculated slope angle. Use this for general aspect/elevation targeting, not micro-route finding.
+
+```
+$ ullrs-secret terrain --help
+Usage: ullrs-secret terrain [OPTIONS]
+
+  Calculate elevation, slope, and aspect for a coordinate.
+
+Options:
+  --lat FLOAT  Latitude of the location (+ for North, - for South)  [required]
+  --lon FLOAT  Longitude of the location (+ for East, - for West)  [required]
+  --help       Show this message and exit.
+```
+
+Example:
+```
+$ ullrs-secret terrain --lat 46.8523 --lon -121.7603
+Coordinates: 46.85230, -121.76030
+Elevation:   9167.0 ft (2794.1 m)
+Slope:       28°
+Aspect:      135° SE
+```
+
+### SNOTEL data and snow inference
+
+The `snotel` command fetches historical Snow Depth and Snow Water Equivalent (SWE) data from the nearest automated station. It also computes snow density and can roughly infer the expected snow depth at your target elevation using a lapse rate.
+
+* **Data Source:** [USDA NRCS AWDB API](https://wcc.sc.egov.usda.gov/awdbRestApi/swagger-ui/index.html) pulling directly from the SNOTEL (Snow Telemetry) network.
+* **Limitations:** SNOTEL stations are only available in the Western United States and Alaska. Inference logic applies a very simple base assumption (+10% depth per 1000 ft gained) which does not account for wind loading, localized orographic effects, or significant rain-shadows. It is a rough heuristic, not a guarantee.
+
+```
+$ ullrs-secret snotel --help
+Usage: ullrs-secret snotel [OPTIONS]
+
+  Fetch nearest SNOTEL station data and infer snow depth at target elevation.
+
+Options:
+  --lat FLOAT        Latitude of the location (+ for North, - for South)  [required]
+  --lon FLOAT        Longitude of the location (+ for East, - for West)  [required]
+  --elevation FLOAT  Target elevation in ft for snow depth inference.
+  --start TEXT       Start date (YYYY-MM-DD). Defaults to 7 days ago.
+  --end TEXT         End date (YYYY-MM-DD). Defaults to today.
+  --help             Show this message and exit.
+```
+
+Example:
+```
+$ ullrs-secret snotel --lat 46.8523 --lon -121.7603 --elevation 8000
+Nearest SNOTEL Station: Paradise (679:WA:SNTL)
+  Location:  46.78266, -121.74767 (4.8 miles away)
+  Elevation: 5150 ft
+
+Data from 2026-05-01 to 2026-05-08:
+Date         | Depth (cm)   | SWE (mm)     | Density     
+---------------------------------------------------------
+2026-05-01   | 177.8        | 922.0        | 0.52        
+...
+
+Snow Level Inference at 8000 ft:
+  Elevation Difference: +2850 ft
+  Latest SNOTEL Depth (2026-05-08): 127.0 cm
+  Inferred Target Depth (approx. 10%/1000ft): 163.2 cm
 ```
 
 ### Import weather data

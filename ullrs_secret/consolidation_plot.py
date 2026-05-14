@@ -143,10 +143,27 @@ def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_sno
     ax.axhline(y=support_threshold, color="crimson", linestyle="--", linewidth=2.5,
                 label=f"Support Threshold ({support_threshold} cm)", zorder=6)
 
+    # --- Thin Snowpack: Bottoming Out Effect ---
+    thin_snow_limit = 8.0  # cm. Below this, breakable crust is skiable via bottoming out.
+    is_thin_snow = h0_snow_cm <= thin_snow_limit
+
+    if is_thin_snow:
+        ax.axhspan(0, support_threshold, color="darkorange", alpha=0.1, zorder=3,
+                   label="Skiable (Bottoming Out)")
+        
+        # Place text in the first quarter of the graph
+        text_x_idx = min(len(d_total_times) // 4, len(d_total_times) - 1)
+        if text_x_idx >= 0:
+            ax.text(d_total_times[text_x_idx], support_threshold / 2,
+                    "⚠️ Skiable (Bottoming Out)\nExpect Scratchy/Chattery Feel",
+                    color="darkorange", fontsize=11, fontweight="bold", zorder=7,
+                    bbox=dict(facecolor="white", alpha=0.7, edgecolor="none", pad=2))
+
     for i, val in enumerate(d_total_values):
-        if val >= support_threshold and d_total_values[i-1] < support_threshold:
+        if val >= support_threshold and (i == 0 or d_total_values[i-1] < support_threshold):
             cross_time = d_total_times[i]
-            ax.text(cross_time, support_threshold + 0.5, " Base Formed (Go!)",
+            msg = " Base Formed (Smooth Corn!)" if is_thin_snow else " Base Formed (Go!)"
+            ax.text(cross_time, support_threshold + 0.5, msg,
                     color="crimson", fontweight="bold", fontsize=12, zorder=7)
             ax.plot(cross_time, val, marker="*", color="gold", markersize=15,
                     markeredgecolor="red", zorder=8)
@@ -184,6 +201,10 @@ def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_sno
     fig.set_size_inches(current_size[0], current_size[1] + 3.5)
     plt.subplots_adjust(bottom=0.35)
 
+    thin_snow_instruction = (
+        "\n - THIN SNOW (< 8cm): Breakable crust won't trap skis. Skiable before fully frozen via 'Bottoming Out' (scratchy)."
+    ) if is_thin_snow else ""
+
     manual_content = (
         "Thermodynamic Model [Dynamic Density Engine]\n"
         "----------------------------------------------------------------------------------------------------------------------\n"
@@ -194,7 +215,7 @@ def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_sno
         "----------------------------------------------------------------------------------------------------------------------\n"
         " Decision Matrix: \n"
         " - Wait until D_total crosses the Support Threshold before committing to steep lines.\n"
-        " - The star icon (*) marks the exact morning the base locks in."
+        f" - The star icon (*) marks the exact morning the base locks in.{thin_snow_instruction}"
     )
 
     fig.text(

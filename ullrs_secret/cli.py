@@ -75,6 +75,92 @@ def terrain(lat, lon):
         click.echo(f"Error fetching terrain data: {e}", err=True)
 
 
+# --- snotel command ---
+
+@cli.command("snotel")
+@click.option("--lat", type=float, required=True, help="Latitude of the location (+ for North, - for South)")
+@click.option("--lon", type=float, required=True, help="Longitude of the location (+ for East, - for West)")
+@click.option("--elevation", type=float, default=None, help="Target elevation in ft for snow depth inference.")
+@click.option("--start", type=str, default=None, help="Start date (YYYY-MM-DD). Defaults to 7 days ago.")
+@click.option("--end", type=str, default=None, help="End date (YYYY-MM-DD). Defaults to today.")
+def snotel(lat, lon, elevation, start, end):
+    """Fetch nearest SNOTEL station data and infer snow depth at target elevation."""
+    from .snotel import get_snotel_report
+    from datetime import datetime
+    
+    try:
+        start_date = datetime.strptime(start, "%Y-%m-%d") if start else None
+        end_date = datetime.strptime(end, "%Y-%m-%d") if end else None
+    except ValueError:
+        raise click.BadParameter("Dates must be in YYYY-MM-DD format.")
+
+    try:
+        report = get_snotel_report(lat, lon, target_elev_ft=elevation, start_date=start_date, end_date=end_date)
+        
+        st = report['station']
+        click.echo(f"Nearest SNOTEL Station: {st.get('name')} ({st.get('stationTriplet')})")
+        click.echo(f"  Location:  {st.get('latitude'):.5f}, {st.get('longitude'):.5f} ({st.get('distance_miles'):.1f} miles away)")
+        
+        st_elev = st.get('elevation')
+        if st_elev:
+            click.echo(f"  Elevation: {st_elev:.0f} ft")
+        else:
+            click.echo("  Elevation: Unknown")
+
+        click.echo(f"\nData from {report['start_date']} to {report['end_date']}:")
+        
+        # Sort dates
+        dates = sorted(report['data'].keys())
+        if not dates:
+            click.echo("  No data available for this period.")
+            return
+
+        click.echo(f"{'Date':<12} | {'Depth (cm)':<12} | {'SWE (mm)':<12} | {'Density':<12}")
+        click.echo("-" * 57)
+        
+        for d in dates:
+            metrics = report['data'][d]
+            # AWDB uses inches. Convert to project units.
+            # 1 inch = 2.54 cm
+            snwd_in = metrics.get('SNWD')
+            wteq_in = metrics.get('WTEQ')
+            
+            snwd_cm_str = f"{snwd_in * 2.54:.1f}" if snwd_in is not None else "N/A"
+            wteq_mm_str = f"{wteq_in * 25.4:.1f}" if wteq_in is not None else "N/A"
+            
+            density_str = "N/A"
+            if snwd_in is not None and wteq_in is not None and snwd_in > 0:
+                density = wteq_in / snwd_in
+                density_str = f"{density:.2f}"
+            
+            click.echo(f"{d:<12} | {snwd_cm_str:<12} | {wteq_mm_str:<12} | {density_str:<12}")
+
+        if elevation and st_elev:
+            # Inference logic
+            click.echo(f"\nSnow Level Inference at {elevation:.0f} ft:")
+            delta_ft = elevation - st_elev
+            click.echo(f"  Elevation Difference: {delta_ft:+.0f} ft")
+            
+            # Simple inference: +/- 10% per 1000 ft
+            multiplier = 1.0 + (delta_ft / 1000.0) * 0.10
+            # Floor at 0
+            multiplier = max(0.0, multiplier)
+            
+            latest_date = dates[-1]
+            latest_metrics = report['data'][latest_date]
+            latest_snwd = latest_metrics.get('SNWD')
+            
+            if latest_snwd is not None:
+                inferred_snwd_cm = (latest_snwd * 2.54) * multiplier
+                click.echo(f"  Latest SNOTEL Depth ({latest_date}): {latest_snwd * 2.54:.1f} cm")
+                click.echo(f"  Inferred Target Depth (approx. 10%/1000ft): {inferred_snwd_cm:.1f} cm")
+            else:
+                 click.echo(f"  Cannot infer: Missing SNWD data on {latest_date}.")
+
+    except Exception as e:
+        click.echo(f"Error fetching SNOTEL data: {e}", err=True)
+
+
 # --- auto-register importer subcommands ---
 
 def _build_import_command(name, entry):

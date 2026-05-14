@@ -1,0 +1,118 @@
+"""SNOTEL data fetching and processing."""
+
+import math
+import requests
+import click
+from datetime import datetime, timedelta
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """Calculate the great circle distance in miles between two points on the earth."""
+    # radius of earth in miles
+    r = 3958.8
+    p = math.pi / 180
+    a = 0.5 - math.cos((lat2 - lat1) * p) / 2 + math.cos(lat1 * p) * math.cos(lat2 * p) * (1 - math.cos((lon2 - lon1) * p)) / 2
+    return 2 * r * math.asin(math.sqrt(a))
+
+def find_nearest_snotel(lat, lon, bbox_deg=2.0):
+    """
+    Finds the nearest SNOTEL station within a bounding box.
+    """
+    # Define bounding box
+    min_lat = lat - bbox_deg
+    max_lat = lat + bbox_deg
+    min_lon = lon - bbox_deg
+    max_lon = lon + bbox_deg
+
+    url = f"https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?activeOnly=true&networks=SNTL&minLatitude={min_lat}&maxLatitude={max_lat}&minLongitude={min_lon}&maxLongitude={max_lon}"
+    
+    response = requests.get(url, headers={"accept": "application/json"})
+    response.raise_for_status()
+    stations = response.json()
+
+    if not stations:
+        raise ValueError(f"No SNOTEL stations found within +/- {bbox_deg} degrees of {lat}, {lon}.")
+
+    nearest_station = None
+    min_dist = float('inf')
+
+    for meta in stations:
+        # The AWDB API sometimes returns other network stations even when filtering by SNTL
+        if meta.get('networkCode') != 'SNTL':
+            continue
+
+        st_lat = meta.get('latitude')
+        st_lon = meta.get('longitude')
+        if st_lat is None or st_lon is None:
+            continue
+            
+        dist = haversine_distance(lat, lon, st_lat, st_lon)
+        if dist < min_dist:
+            min_dist = dist
+            nearest_station = meta
+            nearest_station['distance_miles'] = dist
+            
+    if not nearest_station:
+        raise ValueError("Could not determine the nearest SNOTEL station.")
+        
+    return nearest_station
+
+def fetch_snotel_data(station_triplet, start_date_str, end_date_str):
+    """
+    Fetches daily SNWD and WTEQ data for a given station and time range.
+    """
+    url = f"https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data?stationTriplets={station_triplet}&elements=SNWD,WTEQ&duration=DAILY&beginDate={start_date_str}&endDate={end_date_str}"
+    
+    response = requests.get(url, headers={"accept": "application/json"})
+    response.raise_for_status()
+    data = response.json()
+    
+    # Process the data into a usable format
+    results = {}
+    if not data or len(data) == 0:
+        return results
+
+    station_data = data[0].get('data', [])
+    for entry in station_data:
+        elem = entry.get('stationElement', {}).get('elementCode')
+        if elem not in ['SNWD', 'WTEQ']:
+            continue
+            
+        values_list = entry.get('values', [])
+        for v in values_list:
+            date = v.get('date')
+            val = v.get('value')
+            if not date or val is None:
+                continue
+                
+            if date not in results:
+                results[date] = {}
+            results[date][elem] = val
+            
+    return results
+
+def get_snotel_report(target_lat, target_lon, target_elev_ft=None, start_date=None, end_date=None):
+    """
+    Full pipeline to get and process SNOTEL data for a location.
+    """
+    if not end_date:
+        end_date = datetime.now()
+    if not start_date:
+        start_date = end_date - timedelta(days=7)
+        
+    start_str = start_date.strftime("%Y-%m-%d")
+    end_str = end_date.strftime("%Y-%m-%d")
+    
+    station_meta = find_nearest_snotel(target_lat, target_lon)
+    station_triplet = station_meta['stationTriplet']
+    
+    station_elev_ft = station_meta.get('elevation')
+    
+    data = fetch_snotel_data(station_triplet, start_str, end_str)
+    
+    return {
+        "station": station_meta,
+        "target_elev_ft": target_elev_ft,
+        "data": data,
+        "start_date": start_str,
+        "end_date": end_str
+    }
