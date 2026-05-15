@@ -34,11 +34,10 @@ Before we start obsessing over graphs, how do we actually get the weather data? 
 
 6. Before plotting, you need the vitals for your specific line. Tap into your past experience, dig through recent trip reports, or use mapping apps like onX Backcountry to pinpoint the exact elevation range, slope angle, and aspect of the face you want to ski.
 
-7. Finally, feed those precise parameters into `ullrs-secret plot` to generate your predictive analysis chart:
-   ```bash
-   ullrs-secret plot --elevation 8730 --slope 35 --aspect 180 weather_data.json
-   ```
-
+7. Finally, feed those precise parameters into `ullrs-secret corn-plot` to generate your predictive analysis chart:
+    ```bash
+   ullrs-secret corn-plot --elevation 8730 --slope 35 --aspect 180 weather_data.json
+    ```
 Now, onto the daily emotional rollercoaster.
 
 ## Monday (5/4): Ambition is a Dangerous Thing

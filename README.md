@@ -218,15 +218,46 @@ The `import` command fetches weather data from various sources (e.g., NWS, ERA5)
 
 For detailed usage on available importers, the standard JSON format, and instructions on how to build your own importer, please see the [Importers Documentation](ullrs_secret/importers/README.md).
 
-### Effective temperature forecast (primary command)
+### Effective temperature forecast (primary commands)
 
 The main output of this tool. Computes Total Effective Temperature — the actual thermal energy hitting the snow surface — by combining wet bulb temperature with shortwave (solar) and longwave (atmospheric) radiative fluxes. This is the temperature the snowpack "feels," not what the thermometer reads.
 
-```
-$ ullrs-secret plot --help
-Usage: ullrs-secret plot [OPTIONS] FILE
+#### Powder Preservation Forecast (`pow-plot`)
 
-  Read standard JSON, compute effective temps, generate chart and CSV.
+Use `pow-plot` to forecast how long fresh powder will remain dry and light before it degrades. It tracks melting heat integrals against a 15 F-hrs threshold.
+
+```
+$ ullrs-secret pow-plot --help
+Usage: ullrs-secret pow-plot [OPTIONS] FILE
+
+  Read standard JSON, compute effective temps, generate powder preservation chart and CSV.
+
+Options:
+  --start FLOAT      Start day offset (e.g. 0.0 for start of data).
+  --end FLOAT        End day offset (e.g. 3.0). Defaults to end of data.
+  --slope FLOAT      Slope angle in degrees (0 = flat).
+  --aspect FLOAT     Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).
+  --elevation FLOAT  Target elevation in ft (adjusts from data source
+                     elevation).
+  --help             Show this message and exit.
+```
+
+```
+# Check how long fresh snow will preserve on a shady north-facing 35° slope
+$ ullrs-secret pow-plot --slope 35 --aspect 0 weather_data.json
+Chart saved to: pow_forecast_chart.png
+Data saved to: pow_forecast_data.csv
+```
+
+#### Corn Snow Forecast (`corn-plot`)
+
+Use `corn-plot` to predict the prime corn window for spring skiing. It models melt depth, crust breakthrough thresholds, and calculates the optimal soften window based on physical snow density.
+
+```
+$ ullrs-secret corn-plot --help
+Usage: ullrs-secret corn-plot [OPTIONS] FILE
+
+  Read standard JSON, compute effective temps, generate corn snow chart and CSV.
 
 Options:
   --start FLOAT      Start day offset (e.g. 0.0 for start of data).
@@ -242,26 +273,26 @@ Options:
 
 ```
 # Flat terrain (default) — good baseline for open bowls
-$ ullrs-secret plot --end 4.5 weather_data.json
+$ ullrs-secret corn-plot --end 4.5 weather_data.json
 Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
-Chart saved to: effective_temp_chart.png
-Data saved to: effective_temp_data.csv
+Chart saved to: corn_forecast_chart.png
+Data saved to: corn_forecast_data.csv
 
 # Southeast-facing 35° slope — typical steep corn line
-$ ullrs-secret plot --end 4.5 --slope 35 --aspect 135 weather_data.json
+$ ullrs-secret corn-plot --end 4.5 --slope 35 --aspect 135 weather_data.json
 Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
-Chart saved to: effective_temp_chart.png
-Data saved to: effective_temp_data.csv
+Chart saved to: corn_forecast_chart.png
+Data saved to: corn_forecast_data.csv
 
 # Adjust forecast to a higher elevation (data source at 9167 ft, target at 10500 ft)
-$ ullrs-secret plot --end 4.5 --elevation 10500 weather_data.json
+$ ullrs-secret corn-plot --end 4.5 --elevation 10500 weather_data.json
 Data adjusted from 9167.0 ft to target elevation: 10500.0 ft.
 Working Elevation: 10500.0 ft. Local pressure: 690.38 hPa
-Chart saved to: effective_temp_chart.png
-Data saved to: effective_temp_data.csv
+Chart saved to: corn_forecast_chart.png
+Data saved to: corn_forecast_data.csv
 ```
 
-The chart plots effective temperature as the primary curve with wet bulb as overlay, annotates each melt/freeze segment with its integral (F-hrs), and highlights the Prime Corn Window in green. 
+The `corn-plot` chart plots effective temperature as the primary curve with wet bulb as overlay, annotates each melt/freeze segment with its integral (F-hrs), and highlights the Prime Corn Window in green. 
 
 **Dynamic Corn Window:** The timing and duration of the corn window are calculated dynamically based on the estimated physical snow density (`--density`, defaults to 0.5 for high-alpine firn). Denser snow (like late-spring volcano base) requires more initial heat to overcome its overnight "cold content" but can tolerate much higher total heat before its structure collapses. For example, a density of 0.35 yields a 60–90 F-hrs window, while a density of 0.50 stretches it to 80–120 F-hrs.
 
@@ -324,8 +355,6 @@ This prevents the "false positive" trap of infinite depth accumulation during sh
 **Degradation Penalties**
 Degradation penalties apply for insufficient overnight refreezes (Freeze Failure) and isothermal overheating. These energy deficits (degree-hours) are mathematically converted into physical crust degradation (cm) using the dynamic percolation coefficient ($K_M$), ensuring dimensional accuracy across the thermodynamic model.
 
-
-
 ## Output
 
 - `pow_forecast_chart.png` — powder preservation forecast chart (from `pow-plot`)
@@ -334,41 +363,3 @@ Degradation penalties apply for insufficient overnight refreezes (Freeze Failure
 - `corn_forecast_data.csv` — hourly data export with wet bulb and effective temp columns (from `corn-plot`)
 - `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
 - `consolidation_forecast_data.csv` — consolidation model data export
-
-
- it back into crust, bounded by the square root decay of Stefan's Equation.
-
-This prevents the "false positive" trap of infinite depth accumulation during shallow, weak freeze-thaw cycles. The chart tracks this cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable.
-
-**Degradation Penalties**
-Degradation penalties apply for insufficient overnight refreezes (Freeze Failure) and isothermal overheating. These energy deficits (degree-hours) are mathematically converted into physical crust degradation (cm) using the dynamic percolation coefficient ($K_M$), ensuring dimensional accuracy across the thermodynamic model.
-
-
-
-## Output
-
-- `pow_forecast_chart.png` — powder preservation forecast chart (from `pow-plot`)
-- `pow_forecast_data.csv` — hourly data export with wet bulb and effective temp columns (from `pow-plot`)
-- `corn_forecast_chart.png` — corn snow forecast with melt/freeze integrals and corn window (from `corn-plot`)
-- `corn_forecast_data.csv` — hourly data export with wet bulb and effective temp columns (from `corn-plot`)
-- `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
-- `consolidation_forecast_data.csv` — consolidation model data export
-
-
- it back into crust, bounded by the square root decay of Stefan's Equation.
-
-This prevents the "false positive" trap of infinite depth accumulation during shallow, weak freeze-thaw cycles. The chart tracks this cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable.
-
-**Degradation Penalties**
-Degradation penalties apply for insufficient overnight refreezes (Freeze Failure) and isothermal overheating. These energy deficits (degree-hours) are mathematically converted into physical crust degradation (cm) using the dynamic percolation coefficient ($K_M$), ensuring dimensional accuracy across the thermodynamic model.
-
-
-
-## Output
-
-- `effective_temp_chart.png` — effective temperature forecast with melt/freeze integrals and corn window (from `plot`)
-- `effective_temp_data.csv` — hourly data export with wet bulb and effective temp columns
-- `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
-- `consolidation_forecast_data.csv` — consolidation model data export
-
-
