@@ -5,7 +5,8 @@ import click
 from .import_data import write_weather_json
 from .importers import get_registry
 from .consolidation_plot import run_consolidation_model
-from .plot import run_plot
+from .pow_plot import run_pow_plot
+from .corn_plot import run_corn_plot
 
 
 @click.group()
@@ -36,9 +37,23 @@ def consolidation_plot(file, start, end, swe, depth, slope, aspect, elevation):
     run_consolidation_model(file, start_days=start, end_days=end, swe_mm=swe, h0_snow_cm=depth, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation)
 
 
-# --- plot command ---
+# --- pow-plot command ---
 
-@cli.command("plot")
+@cli.command("pow-plot")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--start", type=float, default=None, help="Start day offset (e.g. 0.0 for start of data).")
+@click.option("--end", type=float, default=None, help="End day offset (e.g. 3.0). Defaults to end of data.")
+@click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat).")
+@click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).")
+@click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation).")
+def pow_plot(file, start, end, slope, aspect, elevation):
+    """Read standard JSON, compute effective temps, generate powder preservation chart and CSV."""
+    run_pow_plot(file, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation)
+
+
+# --- corn-plot command ---
+
+@cli.command("corn-plot")
 @click.argument("file", type=click.Path(exists=True))
 @click.option("--start", type=float, default=None, help="Start day offset (e.g. 0.0 for start of data).")
 @click.option("--end", type=float, default=None, help="End day offset (e.g. 3.0). Defaults to end of data.")
@@ -46,9 +61,9 @@ def consolidation_plot(file, start, end, swe, depth, slope, aspect, elevation):
 @click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).")
 @click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation).")
 @click.option("--density", type=float, default=0.5, help="Estimated snow density (e.g. 0.35 for typical spring snow, 0.50 for firn).")
-def plot(file, start, end, slope, aspect, elevation, density):
-    """Read standard JSON, compute effective temps, generate chart and CSV."""
-    run_plot(file, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation, snow_density=density)
+def corn_plot(file, start, end, slope, aspect, elevation, density):
+    """Read standard JSON, compute effective temps, generate corn snow chart and CSV."""
+    run_corn_plot(file, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation, snow_density=density)
 
 
 # --- terrain command ---

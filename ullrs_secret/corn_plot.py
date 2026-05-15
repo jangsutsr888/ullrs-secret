@@ -1,8 +1,7 @@
-"""Read standard weather JSON, compute effective temperatures, plot and export."""
+"""Read standard weather JSON, compute effective temperatures, plot and export corn snow forecast."""
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import pytz
 
 from .core import get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth, calculate_dynamic_corn_window
 from .plot_utils import (
@@ -14,9 +13,9 @@ from .plot_utils import (
 )
 
 
-def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
+def plot_corn_forecast(times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
                            slope_deg=0.0, aspect_deg=180.0, snow_density=0.5):
-    """Generate the effective temperature forecast chart with melt/freeze integral annotations."""
+    """Generate the effective temperature forecast chart with melt/freeze integral annotations for corn snow."""
     fig, ax = plt.subplots(figsize=(20, 7))
 
     # Assume typical spring snow (density ~0.35) for depth annotations
@@ -135,7 +134,7 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
     lon_str = f"{abs(lon):.4f}°{'W' if lon < 0 else 'E'}" if lon is not None else "N/A"
 
     ax.set_title(
-        f"Hourly Effective Temp vs Wet Bulb Temp - Elev: {elevation_ft} ft | Snow Density: {snow_density:.2f}\n"
+        f"Corn Snow Forecast - Elev: {elevation_ft} ft | Snow Density: {snow_density:.2f}\n"
         f"Location: {lat_str}, {lon_str} | Slope: {slope_deg:.0f}° {aspect_label} aspect | Timezone: US Pacific Time (PT)",
         fontsize=18,
     )
@@ -175,18 +174,12 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
         f"  Effective Temp = Wet Bulb + Shortwave Radiative Equiv (+T) + Longwave Radiative Equiv (-T)\n"
         f"  * NOTE: This model explicitly calculates slope/aspect. Thresholds below apply universally to ANY slope.\n"
         f"----------------------------------------------------------------------------------------------------------------------\n"
-        f"[Phase 1: Powder Preservation (Dry Snow)]\n"
-        f" * Pristine Powder (Daily): Daily ETDH < 15 F-hrs. (Minimal energy to maintain crystal structure)\n"
-        f" * Powder Recovery Check (Nightly): \n"
-        f"    - Must meet EFDH > 30 F-hrs AND EFDH > 0.8 * Prev_Day_ETDH to prevent settlement.\n"
-        f" * Settlement / Getting Heavy: Daily ETDH 20 ~ 40 F-hrs. (Snow begins to round and densify)\n"
-        f"----------------------------------------------------------------------------------------------------------------------\n"
-        f"[Phase 2: The Corn Cycle (Melt-Freeze)]  * Dynamically scaled for snow density {snow_density:.2f}\n"
+        f"[The Corn Cycle (Melt-Freeze)]  * Dynamically scaled for snow density {snow_density:.2f}\n"
         f" * Crust Break-through: Daily ETDH 40 ~ {min_fhrs:.0f} F-hrs. (DANGEROUS: Weak surface, 'breakable' crust, high ACL risk)\n"
         f" * PRIME CORN WINDOW: Daily ETDH {min_fhrs:.0f} ~ {max_fhrs:.0f} F-hrs. (Optimal melt depth up to {d_max_corn:.1f} cm)\n"
         f" * Sticky/Grabby (Overcooked): Daily ETDH {max_fhrs + 10:.0f} ~ {max_fhrs + 40:.0f} F-hrs. (Deep melt, suction effect, high drag)\n"
         f"----------------------------------------------------------------------------------------------------------------------\n"
-        f"[Phase 3: Danger & Reset Protocol (Isothermal/Wet)]\n"
+        f"[Danger & Reset Protocol (Isothermal/Wet)]\n"
         f" * Overnight Reset Requirements (to clear heat debt & form crust):\n"
         f"    - Poor Reset (Supportable? No): Night EFDH < 60 F-hrs. (Thin crust < {d_poor_reset:.1f} cm, base remains unstable)\n"
         f"    - Full Reset (Structure Restored): Night EFDH > 100 F-hrs (Solid crust > {d_full_reset:.1f} cm).\n"
@@ -202,21 +195,21 @@ def plot_effective_forecast(times, adjusted_wbs, effective_temps, elevation_ft, 
         bbox=dict(facecolor="ghostwhite", alpha=0.9, edgecolor="lightgray", boxstyle="round,pad=1"),
     )
 
-    plt.savefig("effective_temp_chart.png", dpi=150, bbox_inches="tight")
-    print(f"Chart saved to: effective_temp_chart.png")
+    plt.savefig("corn_forecast_chart.png", dpi=150, bbox_inches="tight")
+    print(f"Chart saved to: corn_forecast_chart.png")
     return fig
 
 
-def run_plot(json_path, start_days=None, end_days=None, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None, snow_density=0.5):
-    """Load weather data, compute effective temps, generate chart and CSV."""
+def run_corn_plot(json_path, start_days=None, end_days=None, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None, snow_density=0.5):
+    """Load weather data, compute effective temps, generate corn forecast chart and CSV."""
     elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = (
         prepare_effective_temp_data(json_path, start_days=start_days, end_days=end_days, slope_deg=slope_deg, aspect_deg=aspect_deg,
                                    target_elevation_ft=target_elevation_ft)
     )
 
-    plot_effective_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
+    plot_corn_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
                            slope_deg=slope_deg, aspect_deg=aspect_deg, snow_density=snow_density)
     export_forecast_csv(
-        f_times, f_temps, f_rhs, adjusted_wbs, "effective_temp_data.csv",
+        f_times, f_temps, f_rhs, adjusted_wbs, "corn_forecast_data.csv",
         effective_temps=effective_temps,
     )

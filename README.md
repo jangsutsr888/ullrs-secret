@@ -328,6 +328,44 @@ Degradation penalties apply for insufficient overnight refreezes (Freeze Failure
 
 ## Output
 
+- `pow_forecast_chart.png` — powder preservation forecast chart (from `pow-plot`)
+- `pow_forecast_data.csv` — hourly data export with wet bulb and effective temp columns (from `pow-plot`)
+- `corn_forecast_chart.png` — corn snow forecast with melt/freeze integrals and corn window (from `corn-plot`)
+- `corn_forecast_data.csv` — hourly data export with wet bulb and effective temp columns (from `corn-plot`)
+- `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
+- `consolidation_forecast_data.csv` — consolidation model data export
+
+
+ it back into crust, bounded by the square root decay of Stefan's Equation.
+
+This prevents the "false positive" trap of infinite depth accumulation during shallow, weak freeze-thaw cycles. The chart tracks this cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable.
+
+**Degradation Penalties**
+Degradation penalties apply for insufficient overnight refreezes (Freeze Failure) and isothermal overheating. These energy deficits (degree-hours) are mathematically converted into physical crust degradation (cm) using the dynamic percolation coefficient ($K_M$), ensuring dimensional accuracy across the thermodynamic model.
+
+
+
+## Output
+
+- `pow_forecast_chart.png` — powder preservation forecast chart (from `pow-plot`)
+- `pow_forecast_data.csv` — hourly data export with wet bulb and effective temp columns (from `pow-plot`)
+- `corn_forecast_chart.png` — corn snow forecast with melt/freeze integrals and corn window (from `corn-plot`)
+- `corn_forecast_data.csv` — hourly data export with wet bulb and effective temp columns (from `corn-plot`)
+- `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
+- `consolidation_forecast_data.csv` — consolidation model data export
+
+
+ it back into crust, bounded by the square root decay of Stefan's Equation.
+
+This prevents the "false positive" trap of infinite depth accumulation during shallow, weak freeze-thaw cycles. The chart tracks this cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable.
+
+**Degradation Penalties**
+Degradation penalties apply for insufficient overnight refreezes (Freeze Failure) and isothermal overheating. These energy deficits (degree-hours) are mathematically converted into physical crust degradation (cm) using the dynamic percolation coefficient ($K_M$), ensuring dimensional accuracy across the thermodynamic model.
+
+
+
+## Output
+
 - `effective_temp_chart.png` — effective temperature forecast with melt/freeze integrals and corn window (from `plot`)
 - `effective_temp_data.csv` — hourly data export with wet bulb and effective temp columns
 - `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
