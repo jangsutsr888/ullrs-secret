@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 import click
 
 from . import register
-from ..plot_utils import calculate_distance_miles
+from ..plot_utils import calculate_distance_miles, calculate_bearing
 
 
 def _download(url):
@@ -47,8 +47,9 @@ def _parse_xml(xml_data, input_lat, input_lon):
 
     if latitude is not None and longitude is not None:
         distance_miles = calculate_distance_miles(input_lat, input_lon, latitude, longitude)
+        bearing = calculate_bearing(input_lat, input_lon, latitude, longitude)
         click.echo(f"Matched nearest NWS grid point: Lat {latitude:.4f}, Lon {longitude:.4f}")
-        click.echo(f"Distance from input location: {distance_miles:.2f} miles")
+        click.echo(f"Distance from input location: {distance_miles:.2f} miles ({bearing})")
 
     height_elem = root.find(".//location/height")
     elevation_ft = float(height_elem.text) if height_elem is not None else 0.0

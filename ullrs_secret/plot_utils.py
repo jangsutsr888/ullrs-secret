@@ -29,6 +29,25 @@ def calculate_distance_miles(lat1, lon1, lat2, lon2):
     return R * c
 
 
+def calculate_bearing(lat1, lon1, lat2, lon2):
+    """Calculate the compass bearing from point 1 to point 2."""
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    diff_lon_rad = math.radians(lon2 - lon1)
+    
+    x = math.sin(diff_lon_rad) * math.cos(lat2_rad)
+    y = math.cos(lat1_rad) * math.sin(lat2_rad) - (math.sin(lat1_rad) * math.cos(lat2_rad) * math.cos(diff_lon_rad))
+    
+    initial_bearing = math.atan2(x, y)
+    initial_bearing = math.degrees(initial_bearing)
+    compass_bearing = (initial_bearing + 360) % 360
+    
+    # Convert to cardinal direction
+    dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+    ix = round(compass_bearing / (360. / 16.))
+    return dirs[ix % 16]
+
+
 def load_weather_data(json_path):
     """Load standard weather JSON into a dict of parsed arrays."""
     with open(json_path, "r", encoding="utf-8") as f:

@@ -30,7 +30,7 @@ import xarray as xr
 
 from . import register
 from .. import core
-from ..plot_utils import calculate_distance_miles
+from ..plot_utils import calculate_distance_miles, calculate_bearing
 
 
 def _fetch_era5(lat, lon, start_date_str, end_date_str, tz_name):
@@ -91,10 +91,11 @@ def _fetch_era5(lat, lon, start_date_str, end_date_str, tz_name):
         
         grid_lat = float(point_data.latitude.values)
         grid_lon = float(point_data.longitude.values)
-        
+
         distance_miles = calculate_distance_miles(lat, lon, grid_lat, grid_lon)
+        bearing = calculate_bearing(lat, lon, grid_lat, grid_lon)
         click.echo(f"Matched nearest ERA5 grid point: Lat {grid_lat:.2f}, Lon {grid_lon:.2f}")
-        click.echo(f"Distance from input location: {distance_miles:.2f} miles")
+        click.echo(f"Distance from input location: {distance_miles:.2f} miles ({bearing})")
         
         # Geopotential z = m^2/s^2, z / 9.80665 = m
         z_val = float(point_data['z'].values.flatten()[0])

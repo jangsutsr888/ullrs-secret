@@ -5,30 +5,7 @@ import requests
 import click
 from datetime import datetime, timedelta
 
-def haversine_distance(lat1, lon1, lat2, lon2):
-    """Calculate the great circle distance in miles between two points on the earth."""
-    r = 3958.8
-    p = math.pi / 180
-    a = 0.5 - math.cos((lat2 - lat1) * p) / 2 + math.cos(lat1 * p) * math.cos(lat2 * p) * (1 - math.cos((lon2 - lon1) * p)) / 2
-    return 2 * r * math.asin(math.sqrt(a))
-
-def calculate_bearing(lat1, lon1, lat2, lon2):
-    """Calculate the compass bearing from point 1 to point 2."""
-    lat1_rad = math.radians(lat1)
-    lat2_rad = math.radians(lat2)
-    diff_lon_rad = math.radians(lon2 - lon1)
-    
-    x = math.sin(diff_lon_rad) * math.cos(lat2_rad)
-    y = math.cos(lat1_rad) * math.sin(lat2_rad) - (math.sin(lat1_rad) * math.cos(lat2_rad) * math.cos(diff_lon_rad))
-    
-    initial_bearing = math.atan2(x, y)
-    initial_bearing = math.degrees(initial_bearing)
-    compass_bearing = (initial_bearing + 360) % 360
-    
-    # Convert to cardinal direction
-    dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
-    ix = round(compass_bearing / (360. / 16.))
-    return dirs[ix % 16]
+from .plot_utils import calculate_distance_miles, calculate_bearing
 
 def find_nearest_snotel_stations(lat, lon, count=5, bbox_deg=2.0):
     """
@@ -59,7 +36,7 @@ def find_nearest_snotel_stations(lat, lon, count=5, bbox_deg=2.0):
         if st_lat is None or st_lon is None:
             continue
             
-        dist = haversine_distance(lat, lon, st_lat, st_lon)
+        dist = calculate_distance_miles(lat, lon, st_lat, st_lon)
         bearing = calculate_bearing(lat, lon, st_lat, st_lon)
         meta['distance_miles'] = dist
         meta['direction'] = bearing

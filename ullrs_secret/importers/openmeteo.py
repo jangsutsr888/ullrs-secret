@@ -8,7 +8,7 @@ from datetime import datetime
 from . import register
 from .. import core
 from ..terrain import get_terrain_data
-from ..plot_utils import calculate_distance_miles
+from ..plot_utils import calculate_distance_miles, calculate_bearing
 
 
 def _fetch_openmeteo(lat, lon, model, tz_name):
@@ -37,11 +37,11 @@ def _fetch_openmeteo(lat, lon, model, tz_name):
     # Open-Meteo returns the actual resolved coordinates based on the model's grid
     grid_lat = data.get("latitude", lat)
     grid_lon = data.get("longitude", lon)
-    
-    distance_miles = calculate_distance_miles(lat, lon, grid_lat, grid_lon)
-    click.echo(f"Matched nearest grid point: Lat {grid_lat:.4f}, Lon {grid_lon:.4f}")
-    click.echo(f"Distance from input location: {distance_miles:.2f} miles")
 
+    distance_miles = calculate_distance_miles(lat, lon, grid_lat, grid_lon)
+    bearing = calculate_bearing(lat, lon, grid_lat, grid_lon)
+    click.echo(f"Matched nearest grid point: Lat {grid_lat:.4f}, Lon {grid_lon:.4f}")
+    click.echo(f"Distance from input location: {distance_miles:.2f} miles ({bearing})")
     click.echo("Fetching accurate elevation for the grid point from Open Topo Data...")
     try:
         # We use the grid coordinates for terrain to match the weather data's actual location
