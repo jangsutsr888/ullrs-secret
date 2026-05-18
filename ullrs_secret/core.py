@@ -190,6 +190,30 @@ def calculate_snow_density(swe_mm, h0_snow_cm):
     real_density = (swe_mm / 10.0) / h0_snow_cm
     return max(0.05, min(0.60, real_density))
 
+def calculate_percolation_factor(real_density):
+    """
+    Calculate the wetting front amplification factor for meltwater percolation.
+    Based on mass conservation and the liquid water holding capacity (theta_r)
+    of the porous snowpack.
+    
+    Args:
+        real_density (float): Estimated physical snow density (e.g., 0.1 to 0.6 g/cm³).
+        
+    Returns:
+        float: The percolation amplification factor.
+    """
+    # Empirical relationship: higher density (metamorphosed spring snow) means larger
+    # grain size and lower water holding capacity (theta_r).
+    # Powder (0.1 g/cm³) holds ~6%, while spring firn (0.4 g/cm³) holds ~2%.
+    theta_r = max(0.02, 0.06 - (real_density - 0.1) * 0.1)
+    
+    # Physical formula: Percolation Factor = (Snow Density / Water Density) / Holding Capacity
+    # Assuming water density is 1.0 g/cm³
+    factor = real_density / theta_r
+    
+    # Physical lower bound: wetting depth cannot be less than melt depth
+    return max(1.0, factor)
+
 def get_consolidation_coefficients(real_density):
     """Return dynamic percolation (K_M) and freeze conductivity (K_F) coefficients based on density."""
     K_M = (real_density * 2.0) + 0.1

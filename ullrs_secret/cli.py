@@ -32,9 +32,10 @@ def import_cmd():
 @click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat).")
 @click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).")
 @click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation).")
-def consolidation_plot(file, start, end, swe, depth, slope, aspect, elevation):
+@click.option("--density", type=float, default=None, help="Estimated snow density (e.g. 0.35 for typical spring snow). Overrides SWE if provided.")
+def consolidation_plot(file, start, end, swe, depth, slope, aspect, elevation, density):
     """Compute melt-freeze consolidation model and plot D_total curve."""
-    run_consolidation_model(file, start_days=start, end_days=end, swe_mm=swe, h0_snow_cm=depth, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation)
+    run_consolidation_model(file, start_days=start, end_days=end, swe_mm=swe, h0_snow_cm=depth, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation, snow_density=density)
 
 
 # --- pow-plot command ---
