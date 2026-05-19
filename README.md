@@ -326,7 +326,7 @@ Example outputs:
 $ ullrs-secret consolidation-plot --help
 Usage: ullrs-secret consolidation-plot [OPTIONS] FILE
 
-  Compute melt-freeze consolidation model and plot D_total curve.
+  Compute melt-freeze consolidation model and plot the multi-layer profile.
 
 Options:
   --start FLOAT      Start day offset (e.g. 0.0 for start of data).
@@ -337,23 +337,27 @@ Options:
 ```
 
 ```
-$ ullrs-secret consolidation-plot --days 4.5 --swe 40 --depth 25 weather_data.json
+$ ullrs-secret consolidation-plot --end 4.5 --swe 40 --depth 25 weather_data.json
 Elevation: 9167.0 ft. Local pressure: 719.64 hPa
-Chart saved to: d_total_curve.png
+Chart saved to: multi-layer-profile.png
 Data saved to: consolidation_forecast_data.csv
 ```
 
-This models how melt-freeze cycles structurally consolidate new snow into a supportable corn base. Snow density is derived from SWE and physical depth, which drives dynamic heat transfer and percolation coefficients.
+This models how melt-freeze cycles structurally consolidate new snow into a supportable corn base. The core physics engine is a **Dynamic Multi-Layer Finite Element Simulation**.
 
-**Physics Engine: Two-State Mass Balance**
-The engine utilizes a rigorous "Two-State Mass Balance" model, tracking both the consolidated icy crust layer and the un-frozen wet snow layer. Rather than linearly accumulating depth infinitely, the model simulates physical reality:
-- **Daytime Melting:** Solar heat attacks the existing crust first, breaking it down and converting it into wet, un-frozen snow (liquid penetration depth).
-- **Nighttime Freezing:** Overnight freezing energy is applied *only* to the available wet snow layer, converting it back into crust, bounded by the square root decay of Stefan's Equation.
+**Physics Engine: Dynamic Multi-Layer Tracking**
+Rather than tracking a single arbitrary depth line, the engine mathematically splits the snowpack into distinct physical layers (`Crust`, `Slush`, `Dry Snow`) and dynamically calculates the thermodynamic evolution of each layer over time based on mass conservation and volume compression:
 
-This prevents the "false positive" trap of infinite depth accumulation during shallow, weak freeze-thaw cycles. The chart tracks this cumulative consolidated depth (D_total) and marks when it crosses the support threshold — the point where the base locks in and steep lines become viable.
+- **Layer-Specific Density & Surface Dominance:** Each layer tracks its own independent density. The speed of daytime melting and nighttime freezing is dictated entirely by the density of the *top surface layer*. As the surface consolidates into dense spring Firn, its thermal conductivity spikes, creating the classic spring effect where the surface melts and freezes extremely rapidly.
+- **Zero-Resistance Slush Percolation:** When daytime heat melts the surface, it generates a specific Water Equivalent ($W_{eq}$). This liquid water percolates downward. Crucially, if it encounters an unfrozen `Slush` layer, it passes through with *zero resistance*—depositing its heat and mass directly onto the deeper, intact layers. This accurately models how a buried weak layer ("Crust-over-slush") accelerates the deterioration of the underlying snowpack.
+- **Physical Settlement:** When structured snow (Dry or Crust) is melted and converted into Slush, the loss of the crystal matrix combined with the lubrication of liquid water causes immediate physical settlement. The simulation automatically compacts newly formed Slush layers by 20%, visually reducing the total depth of the snowpack on the chart.
+- **Asymptotic Consolidation:** When Slush refreezes into Crust, its density jumps. Over multiple cycles, the density mathematically asymptotes toward the physical limit of spring corn snow (~0.55 g/cm³).
 
-**Degradation Penalties**
-Degradation penalties apply for insufficient overnight refreezes (Freeze Failure) and isothermal overheating. These energy deficits (degree-hours) are mathematically converted into physical crust degradation (cm) using the dynamic percolation coefficient ($K_M$), ensuring dimensional accuracy across the thermodynamic model.
+**Visualizing the Trap:**
+The chart renders a vertical cross-section of the snowpack over time as stacked colored rectangles. A red dashed line marks the 15cm support threshold from the surface. 
+This multi-layer visualization instantly reveals the most dangerous spring snowpack structure: **Multiple Weak Layers (Crust-Facet-Crust)**. If you see a thin purple `Crust` layer (< 15cm) sitting on top of a thick blue `Slush` layer, the structure cannot support a skier. Breakthrough is imminent, and the avalanche risk is extreme.
+
+![Multi-Layer Consolidation Profile](example/multi-layer-profile.png)
 
 ## Output
 
