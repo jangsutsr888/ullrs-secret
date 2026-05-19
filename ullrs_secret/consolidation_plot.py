@@ -17,6 +17,183 @@ from .plot_utils import (
 )
 
 
+def consolidate_layers(snowpack):
+    """Merges adjacent snow layers of the same type and computes weight-averaged density."""
+    consolidated = []
+    for layer in snowpack:
+        if layer['thickness'] <= 0:
+            continue
+        if not consolidated:
+            consolidated.append(layer)
+        elif consolidated[-1]['type'] == layer['type']:
+            last = consolidated[-1]
+            total_thick = last['thickness'] + layer['thickness']
+            if total_thick > 0:
+                last['density'] = (last['density'] * last['thickness'] + layer['density'] * layer['thickness']) / total_thick
+                last['thickness'] = total_thick
+                last['is_settled'] = last.get('is_settled', False) and layer.get('is_settled', False)
+        else:
+            consolidated.append(layer)
+    return consolidated
+
+
+def apply_melt_phase(snowpack, current_Im):
+    """
+    Finite Element Melt Phase: Push melt integral (Im) down layer by layer.
+    Melted layers convert to slush, generating Water Equivalent (W_eq) which percolates down.
+    Returns the updated snowpack.
+    """
+    remaining_Im_c_days = current_Im / 43.2
+    W_eq = 0.0
+    
+    new_snowpack = []
+    for layer in snowpack:
+        if remaining_Im_c_days > 0:
+            layer_K_M = (layer['density'] * 2.0) + 0.1
+            c_days_needed = layer['thickness'] / layer_K_M if layer_K_M > 0 else float('inf')
+            
+            if remaining_Im_c_days >= c_days_needed:
+                # Melt entire layer
+                melted_part = layer.copy()
+                melted_part['type'] = 'slush'
+                new_snowpack.append(melted_part)
+                
+                W_eq += layer['thickness'] * layer['density']
+                remaining_Im_c_days -= c_days_needed
+            else:
+                # Melt partial layer
+                D_melt = remaining_Im_c_days * layer_K_M
+                melted_part = layer.copy()
+                melted_part['thickness'] = D_melt
+                melted_part['type'] = 'slush'
+                new_snowpack.append(melted_part)
+                
+                W_eq += D_melt * layer['density']
+                
+                unmelted_part = layer.copy()
+                unmelted_part['thickness'] = layer['thickness'] - D_melt
+                
+                # Process percolation for the unmelted part immediately
+                if unmelted_part['type'] == 'slush':
+                    # Zero resistance in slush, water passes through
+                    new_snowpack.append(unmelted_part)
+                else:
+                    theta_r = max(0.02, 0.06 - (unmelted_part['density'] - 0.1) * 0.1)
+                    D_wet = W_eq / theta_r if theta_r > 0 else 0
+                    if D_wet >= unmelted_part['thickness']:
+                        wetted = unmelted_part.copy()
+                        wetted['type'] = 'slush'
+                        new_snowpack.append(wetted)
+                        W_eq -= unmelted_part['thickness'] * theta_r
+                    else:
+                        if D_wet > 0:
+                            wetted = unmelted_part.copy()
+                            wetted['thickness'] = D_wet
+                            wetted['type'] = 'slush'
+                            new_snowpack.append(wetted)
+                            W_eq = 0
+                        dry = unmelted_part.copy()
+                        dry['thickness'] = unmelted_part['thickness'] - D_wet
+                        new_snowpack.append(dry)
+                        
+                remaining_Im_c_days = 0
+        else:
+            # Below thermal melt zone, strictly percolation
+            if W_eq > 0:
+                if layer['type'] == 'slush':
+                    new_snowpack.append(layer)
+                else:
+                    theta_r = max(0.02, 0.06 - (layer['density'] - 0.1) * 0.1)
+                    D_wet = W_eq / theta_r if theta_r > 0 else 0
+                    if D_wet >= layer['thickness']:
+                        wetted = layer.copy()
+                        wetted['type'] = 'slush'
+                        new_snowpack.append(wetted)
+                        W_eq -= layer['thickness'] * theta_r
+                    else:
+                        if D_wet > 0:
+                            wetted = layer.copy()
+                            wetted['thickness'] = D_wet
+                            wetted['type'] = 'slush'
+                            new_snowpack.append(wetted)
+                            W_eq = 0
+                        dry = layer.copy()
+                        dry['thickness'] = layer['thickness'] - D_wet
+                        new_snowpack.append(dry)
+            else:
+                new_snowpack.append(layer)
+
+    # Apply Physical Settlement and Density Update to new Slush
+    for layer in new_snowpack:
+        if layer['type'] == 'slush' and not layer.get('is_settled', False):
+            layer['thickness'] *= 0.8
+            layer['density'] = max(0.45, layer['density'])
+            layer['is_settled'] = True
+
+    return consolidate_layers(new_snowpack)
+
+
+def apply_freeze_phase(snowpack, current_If):
+    """
+    Finite Element Freeze Phase: Push freeze integral (If) down layer by layer
+    using the non-linear Stefan equation.
+    Returns the updated snowpack.
+    """
+    import math
+    remaining_If_c_days = current_If / 43.2
+    current_z = 0.0
+    
+    new_snowpack = []
+    for layer in snowpack:
+        if remaining_If_c_days > 0:
+            layer_K_F = (layer['density'] * 10.0) + 0.5
+            
+            # Integral needed to push the freeze front entirely through this layer
+            # Based on Stefan's D = K_F * sqrt(t), time = D^2 / K_F^2
+            # So time_needed = ((z_top + thickness)^2 - z_top^2) / K_F^2
+            c_days_needed = ((current_z + layer['thickness'])**2 - current_z**2) / (layer_K_F**2) if layer_K_F > 0 else float('inf')
+            
+            if remaining_If_c_days >= c_days_needed:
+                # Freeze entire layer
+                frozen_layer = layer.copy()
+                if frozen_layer['type'] == 'slush':
+                    frozen_layer['type'] = 'crust'
+                    frozen_layer['density'] = frozen_layer['density'] + 0.5 * (0.55 - frozen_layer['density'])
+                    frozen_layer['is_settled'] = False
+                elif frozen_layer['type'] == 'crust':
+                    frozen_layer['density'] = frozen_layer['density'] + 0.5 * (0.55 - frozen_layer['density'])
+                new_snowpack.append(frozen_layer)
+                
+                remaining_If_c_days -= c_days_needed
+                current_z += layer['thickness']
+            else:
+                # Freeze partial layer using non-linear math
+                # (z_top + h_partial)^2 = remaining_If * K_F^2 + z_top^2
+                h_partial = math.sqrt(remaining_If_c_days * (layer_K_F**2) + current_z**2) - current_z
+                
+                frozen_part = layer.copy()
+                frozen_part['thickness'] = h_partial
+                if frozen_part['type'] == 'slush':
+                    frozen_part['type'] = 'crust'
+                    frozen_part['density'] = frozen_part['density'] + 0.5 * (0.55 - frozen_part['density'])
+                    frozen_part['is_settled'] = False
+                elif frozen_part['type'] == 'crust':
+                    frozen_part['density'] = frozen_part['density'] + 0.5 * (0.55 - frozen_part['density'])
+                new_snowpack.append(frozen_part)
+                
+                unfrozen_part = layer.copy()
+                unfrozen_part['thickness'] = layer['thickness'] - h_partial
+                new_snowpack.append(unfrozen_part)
+                
+                remaining_If_c_days = 0
+                current_z += layer['thickness'] # End of thermal zone
+        else:
+            new_snowpack.append(layer)
+            current_z += layer['thickness']
+
+    return consolidate_layers(new_snowpack)
+
+
 def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_snow_cm=20.0, slope_deg=0.0, aspect_deg=180.0, snow_density=None, lat=None, lon=None):
     """
     Generate a focused chart showing the multi-layer snowpack profile progression.
@@ -77,163 +254,10 @@ def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_sno
             current_If += integral
 
         if is_melt:
-            # 1. Determine surface parameters dynamically
-            top_layer = snowpack[0]
-            top_density = top_layer['density']
-            K_M = (top_density * 2.0) + 0.1
-            
-            D_melt = calculate_melt_depth(current_Im, K_M)
-            W_eq = D_melt * top_density # Total water equivalent volume generated
-            
-            new_snowpack = []
-            for layer in snowpack:
-                if D_melt > 0:
-                    # We are within the melt/thermal attack zone
-                    if layer['thickness'] <= D_melt:
-                        new_layer = layer.copy()
-                        new_layer['type'] = 'slush'
-                        new_snowpack.append(new_layer)
-                        D_melt -= layer['thickness']
-                    else:
-                        melted_part = layer.copy()
-                        melted_part['thickness'] = D_melt
-                        melted_part['type'] = 'slush'
-                        new_snowpack.append(melted_part)
-                        
-                        unmelted_part = layer.copy()
-                        unmelted_part['thickness'] = layer['thickness'] - D_melt
-                        D_melt = 0
-                        
-                        # Process percolation for the unmelted part of this layer
-                        if unmelted_part['type'] == 'slush':
-                            # Zero resistance in slush, water passes through
-                            new_snowpack.append(unmelted_part)
-                        else:
-                            theta_r = max(0.02, 0.06 - (unmelted_part['density'] - 0.1) * 0.1)
-                            D_wet = W_eq / theta_r if theta_r > 0 else 0
-                            if D_wet >= unmelted_part['thickness']:
-                                wetted = unmelted_part.copy()
-                                wetted['type'] = 'slush'
-                                new_snowpack.append(wetted)
-                                W_eq -= unmelted_part['thickness'] * theta_r
-                            else:
-                                if D_wet > 0:
-                                    wetted = unmelted_part.copy()
-                                    wetted['thickness'] = D_wet
-                                    wetted['type'] = 'slush'
-                                    new_snowpack.append(wetted)
-                                    W_eq = 0
-                                dry = unmelted_part.copy()
-                                dry['thickness'] = unmelted_part['thickness'] - D_wet
-                                new_snowpack.append(dry)
-                else:
-                    # Below thermal melt zone, strictly percolation
-                    if W_eq > 0:
-                        if layer['type'] == 'slush':
-                            new_snowpack.append(layer)
-                        else:
-                            theta_r = max(0.02, 0.06 - (layer['density'] - 0.1) * 0.1)
-                            D_wet = W_eq / theta_r if theta_r > 0 else 0
-                            if D_wet >= layer['thickness']:
-                                wetted = layer.copy()
-                                wetted['type'] = 'slush'
-                                new_snowpack.append(wetted)
-                                W_eq -= layer['thickness'] * theta_r
-                            else:
-                                if D_wet > 0:
-                                    wetted = layer.copy()
-                                    wetted['thickness'] = D_wet
-                                    wetted['type'] = 'slush'
-                                    new_snowpack.append(wetted)
-                                    W_eq = 0
-                                dry = layer.copy()
-                                dry['thickness'] = layer['thickness'] - D_wet
-                                new_snowpack.append(dry)
-                    else:
-                        new_snowpack.append(layer)
-
-            # Apply Physical Settlement and Density Update to new Slush
-            for layer in new_snowpack:
-                if layer['type'] == 'slush' and not layer.get('is_settled', False):
-                    layer['thickness'] *= 0.8
-                    layer['density'] = max(0.45, layer['density'])
-                    layer['is_settled'] = True
-
-            # Consolidate adjacent layers of the same type
-            snowpack = []
-            for layer in new_snowpack:
-                if layer['thickness'] <= 0:
-                    continue
-                if not snowpack:
-                    snowpack.append(layer)
-                elif snowpack[-1]['type'] == layer['type']:
-                    # Weight average the density
-                    last = snowpack[-1]
-                    total_thick = last['thickness'] + layer['thickness']
-                    if total_thick > 0:
-                        last['density'] = (last['density'] * last['thickness'] + layer['density'] * layer['thickness']) / total_thick
-                        last['thickness'] = total_thick
-                        last['is_settled'] = last.get('is_settled', False) and layer.get('is_settled', False)
-                else:
-                    snowpack.append(layer)
-            
+            snowpack = apply_melt_phase(snowpack, current_Im)
             current_Im = 0.0 # Reset melt after applying
-            
         else: # Freeze phase
-            top_layer = snowpack[0]
-            top_density = top_layer['density']
-            K_F = (top_density * 10.0) + 0.5
-            
-            D_freeze = calculate_freeze_depth(current_If, K_F)
-            
-            new_snowpack = []
-            for layer in snowpack:
-                if D_freeze > 0:
-                    if layer['thickness'] <= D_freeze:
-                        frozen_layer = layer.copy()
-                        if frozen_layer['type'] == 'slush':
-                            frozen_layer['type'] = 'crust'
-                            frozen_layer['density'] = frozen_layer['density'] + 0.5 * (0.55 - frozen_layer['density'])
-                            frozen_layer['is_settled'] = False
-                        elif frozen_layer['type'] == 'crust':
-                            frozen_layer['density'] = frozen_layer['density'] + 0.5 * (0.55 - frozen_layer['density'])
-                        new_snowpack.append(frozen_layer)
-                        D_freeze -= layer['thickness']
-                    else:
-                        frozen_part = layer.copy()
-                        frozen_part['thickness'] = D_freeze
-                        if frozen_part['type'] == 'slush':
-                            frozen_part['type'] = 'crust'
-                            frozen_part['density'] = frozen_part['density'] + 0.5 * (0.55 - frozen_part['density'])
-                            frozen_part['is_settled'] = False
-                        elif frozen_part['type'] == 'crust':
-                            frozen_part['density'] = frozen_part['density'] + 0.5 * (0.55 - frozen_part['density'])
-                        new_snowpack.append(frozen_part)
-                        
-                        unfrozen_part = layer.copy()
-                        unfrozen_part['thickness'] = layer['thickness'] - D_freeze
-                        new_snowpack.append(unfrozen_part)
-                        D_freeze = 0
-                else:
-                    new_snowpack.append(layer)
-
-            # Consolidate adjacent layers
-            snowpack = []
-            for layer in new_snowpack:
-                if layer['thickness'] <= 0:
-                    continue
-                if not snowpack:
-                    snowpack.append(layer)
-                elif snowpack[-1]['type'] == layer['type']:
-                    last = snowpack[-1]
-                    total_thick = last['thickness'] + layer['thickness']
-                    if total_thick > 0:
-                        last['density'] = (last['density'] * last['thickness'] + layer['density'] * layer['thickness']) / total_thick
-                        last['thickness'] = total_thick
-                        last['is_settled'] = last.get('is_settled', False) and layer.get('is_settled', False)
-                else:
-                    snowpack.append(layer)
-            
+            snowpack = apply_freeze_phase(snowpack, current_If)
             current_If = 0.0 # Reset freeze after applying
             
         # Record profile for this segment
