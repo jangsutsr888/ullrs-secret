@@ -7,7 +7,6 @@ from datetime import datetime
 
 from . import register
 from .. import core
-from ..terrain import get_terrain_data
 from ..plot_utils import calculate_distance_miles, calculate_bearing
 
 
@@ -42,15 +41,12 @@ def _fetch_openmeteo(lat, lon, model, tz_name):
     bearing = calculate_bearing(lat, lon, grid_lat, grid_lon)
     click.echo(f"Matched nearest grid point: Lat {grid_lat:.4f}, Lon {grid_lon:.4f}")
     click.echo(f"Distance from input location: {distance_miles:.2f} miles ({bearing})")
-    click.echo("Fetching accurate elevation for the grid point from Open Topo Data...")
-    try:
-        # We use the grid coordinates for terrain to match the weather data's actual location
-        terrain = get_terrain_data(grid_lat, grid_lon)
-        elevation_ft = terrain['elevation_ft']
-        click.echo(f"Grid point elevation determined as {elevation_ft:.1f} ft")
-    except Exception as e:
-        click.echo(f"Warning: Could not fetch elevation ({e}). Defaulting to 0 ft.", err=True)
-        elevation_ft = 0.0
+    # Open-Meteo automatically applies statistical downscaling to correct temperatures
+    # and dew points to a high-resolution 90m Digital Elevation Model (DEM).
+    # We must use THIS elevation as our baseline to prevent double-dipping on lapse rates.
+    elevation_m = data.get("elevation", 0.0)
+    elevation_ft = elevation_m * 3.28084
+    click.echo(f"Open-Meteo downscaled elevation: {elevation_ft:.1f} ft ({elevation_m:.1f} m)")
     
     hourly = data.get("hourly", {})
     times = hourly.get("time", [])
