@@ -195,10 +195,37 @@ def apply_freeze_phase(snowpack, current_If):
     return consolidate_layers(new_snowpack)
 
 
-def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_snow_cm=20.0, slope_deg=0.0, aspect_deg=180.0, snow_density=None, lat=None, lon=None):
+from typing import List, Optional
+from datetime import datetime
+import matplotlib.figure
+
+def plot_d_total_curve(times: List[datetime], effective_temps: List[Optional[float]], elevation_ft: float, swe_mm: float = 30.0, h0_snow_cm: float = 20.0, slope_deg: float = 0.0, aspect_deg: float = 180.0, snow_density: Optional[float] = None, lat: Optional[float] = None, lon: Optional[float] = None) -> matplotlib.figure.Figure:
     """
     Generate a focused chart showing the multi-layer snowpack profile progression.
     Visualizes Crust, Slush, and Dry Snow layers over time in a stacked rectangle format.
+    
+    :param times: List of datetime objects for the x-axis.
+    :type times: List[datetime]
+    :param effective_temps: List of calculated effective temperatures.
+    :type effective_temps: List[Optional[float]]
+    :param elevation_ft: Target elevation in feet.
+    :type elevation_ft: float
+    :param swe_mm: Snow water equivalent in mm.
+    :type swe_mm: float
+    :param h0_snow_cm: Physical snow depth in cm.
+    :type h0_snow_cm: float
+    :param slope_deg: Slope angle in degrees (0 = flat).
+    :type slope_deg: float
+    :param aspect_deg: Slope aspect in degrees.
+    :type aspect_deg: float
+    :param snow_density: Custom estimated physical snow density.
+    :type snow_density: Optional[float]
+    :param lat: Latitude in degrees.
+    :type lat: Optional[float]
+    :param lon: Longitude in degrees.
+    :type lon: Optional[float]
+    :return: A matplotlib figure object.
+    :rtype: matplotlib.figure.Figure
     """
     
     fig, ax = plt.subplots(figsize=(20, 10))

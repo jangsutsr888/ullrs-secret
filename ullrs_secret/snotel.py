@@ -4,6 +4,7 @@ import math
 import requests
 import click
 from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
 
 from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
 
@@ -102,9 +103,20 @@ def fetch_snotel_data(station_triplet, start_date_str, end_date_str):
             
     return results
 
-def get_snotel_report(identifier, target_elev_ft=None, start_date=None, end_date=None):
+def get_snotel_report(identifier: str, target_elev_ft: Optional[float] = None, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> Dict[str, Any]:
     """
     Full pipeline to get and process SNOTEL data for a specific station.
+    
+    :param identifier: Station triplet or name.
+    :type identifier: str
+    :param target_elev_ft: Target elevation in feet for inference.
+    :type target_elev_ft: Optional[float]
+    :param start_date: Start date for the data fetch. Defaults to 7 days ago.
+    :type start_date: Optional[datetime]
+    :param end_date: End date for the data fetch. Defaults to today.
+    :type end_date: Optional[datetime]
+    :return: A dictionary containing the station metadata and processed report data.
+    :rtype: Dict[str, Any]
     """
     if not end_date:
         end_date = datetime.now()

@@ -359,6 +359,75 @@ This multi-layer visualization instantly reveals the most dangerous spring snowp
 
 ![Multi-Layer Consolidation Profile](example/multi-layer-profile.png)
 
+## Public Python API
+
+`ullrs-secret` exposes its core calculations and plotting functions as a clean Python API, allowing you to build custom scripts or integrate the forecasting engine into larger applications.
+
+All public methods are exposed directly at the top level of the `ullrs_secret` package and are fully type-hinted and documented.
+
+### Example Usage
+
+```python
+import ullrs_secret as ullrs
+from datetime import datetime
+
+# 1. Terrain & Geography Calculations
+terrain = ullrs.get_terrain_data(lat=46.8523, lon=-121.7603)
+print(f"Elevation: {terrain['elevation_ft']} ft, Slope: {terrain['slope_deg']}°")
+
+# 2. SNOTEL Station Data Fetching
+nearest_stations = ullrs.find_nearest_snotel_stations(lat=46.8523, lon=-121.7603, count=1)
+if nearest_stations:
+    station_id = nearest_stations[0]['stationTriplet']
+    
+    # Fetch data and infer depth for a target elevation
+    report = ullrs.get_snotel_report(site=station_id, target_elev_ft=9000.0)
+    print(f"Latest Inferred Depth: {report['data'][report['end_date']].get('SNWD')} inches (station raw)")
+
+# 3. Core Thermodynamic Calculations
+# Calculate the 'Total Effective Temperature' given a specific slope and aspect
+dt = datetime.now()
+effective_temp = ullrs.effective_temperature_f(
+    t_wet_f=30.5,           # Pre-calculated Wet Bulb temperature
+    t_air_f=35.0, 
+    t_dew_f=28.0, 
+    cloud_pct=20.0, 
+    lat=46.85, 
+    lon=-121.76, 
+    dt_aware=dt,
+    albedo=0.7, 
+    slope_deg=35.0, 
+    aspect_deg=135.0        # South-East facing
+)
+print(f"Thermometer reads 35°F, but the slope feels: {effective_temp:.1f}°F")
+
+# 4. End-to-End Forecasting
+# Fetch weather data directly into memory
+weather_data = ullrs.fetch_weather("nws", lat=46.85, lon=-121.76)
+ullrs.write_weather_json(weather_data, "temp_weather.json")
+
+# Prepare effective temperature data series
+elevation_ft, lat, lon, times, temps, rhs, wbs, eff_temps = ullrs.prepare_effective_temp_data(
+    json_path="temp_weather.json",
+    slope_deg=35.0,
+    aspect_deg=135.0,
+    target_elevation_ft=9000.0
+)
+
+# Generate and save a forecast chart
+fig = ullrs.plot_corn_forecast(
+    times=times, 
+    adjusted_wbs=wbs, 
+    effective_temps=eff_temps, 
+    elevation_ft=elevation_ft, 
+    lat=lat, 
+    lon=lon,
+    slope_deg=35.0, 
+    aspect_deg=135.0
+)
+fig.savefig("my_custom_forecast.png")
+```
+
 ## Output
 
 - `pow_forecast_chart.png` — powder preservation forecast chart (from `pow-plot`)

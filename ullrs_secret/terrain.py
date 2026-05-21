@@ -2,11 +2,19 @@
 
 import math
 import requests
+from typing import Dict
 
-def get_terrain_data(lat, lon):
+def get_terrain_data(lat: float, lon: float) -> Dict[str, float]:
     """
     Fetch a 3x3 grid of elevations around (lat, lon) and calculate
     center elevation, slope, and aspect using Horn's Method.
+    
+    :param lat: Latitude in degrees.
+    :type lat: float
+    :param lon: Longitude in degrees.
+    :type lon: float
+    :return: A dictionary containing 'elevation_m', 'elevation_ft', 'slope_deg', and 'aspect_deg'.
+    :rtype: Dict[str, float]
     """
     # SRTM30M resolution is approximately 30m at the equator.
     # 1 degree latitude is ~111,111 meters.

@@ -2,6 +2,7 @@
 import math
 import json
 from datetime import datetime, timedelta
+from typing import Optional, Tuple, List
 
 import click
 import pandas as pd
@@ -130,10 +131,19 @@ def export_forecast_csv(f_times, f_temps, f_rhs, adjusted_wbs, filename, effecti
 # Helper Functions: Data Preparation
 # ==========================================
 
-def prepare_effective_temp_data(json_path, start_days=None, end_days=None, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None):
-    """Load weather JSON, optionally adjust to a new elevation, and compute temperatures.
+def prepare_effective_temp_data(json_path: str, start_days: Optional[float] = None, end_days: Optional[float] = None, slope_deg: float = 0.0, aspect_deg: float = 180.0, target_elevation_ft: Optional[float] = None) -> Tuple[float, float, float, List[datetime], List[float], List[float], List[Optional[float]], List[Optional[float]]]:
+    """
+    Load weather JSON, optionally adjust to a new elevation, and compute temperatures.
 
     Returns (elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps).
+    
+    :param json_path: Path to the weather JSON file.
+    :param start_days: Start day offset.
+    :param end_days: End day offset.
+    :param slope_deg: Slope angle.
+    :param aspect_deg: Slope aspect.
+    :param target_elevation_ft: Target elevation in feet.
+    :return: A tuple of computed parameters and time series.
     """
     wd = load_weather_data(json_path)
     base_elevation_ft = wd["elevation_ft"]

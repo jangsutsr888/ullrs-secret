@@ -3,6 +3,7 @@ import pytz
 
 from datetime import datetime
 from scipy.optimize import fsolve
+from typing import Optional, Tuple, Dict, List, Any
 
 
 def saturation_vapor_pressure(t_celsius):
@@ -52,10 +53,20 @@ def pressure_at_elevation(elevation_ft):
     return 1013.25 * (1 - 2.25577e-5 * elevation_m) ** 5.25588
 
 
-def wet_bulb_f(t_celsius, rh_pct, p_hpa):
-    """Compute wet bulb temperature in Fahrenheit.
+def wet_bulb_f(t_celsius: float, rh_pct: float, p_hpa: float) -> Optional[float]:
+    """
+    Compute wet bulb temperature in Fahrenheit.
 
     Returns None if solver fails.
+    
+    :param t_celsius: Air temperature in Celsius.
+    :type t_celsius: float
+    :param rh_pct: Relative humidity percentage (0-100).
+    :type rh_pct: float
+    :param p_hpa: Atmospheric pressure in hPa.
+    :type p_hpa: float
+    :return: Wet bulb temperature in Fahrenheit, or None.
+    :rtype: Optional[float]
     """
     e_actual = saturation_vapor_pressure(t_celsius) * (rh_pct / 100.0)
     try:
@@ -105,14 +116,31 @@ def estimate_solar_position(lat, lon, dt_aware):
     return elevation_deg, azimuth_deg
 
 
-def calculate_radiative_equivalent_temps(t_air_f, t_dew_f, cloud_pct, lat, lon, dt_aware, 
-                                         albedo=0.7, slope_deg=0.0, aspect_deg=180.0):
+def calculate_radiative_equivalent_temps(t_air_f: float, t_dew_f: float, cloud_pct: float, lat: float, lon: float, dt_aware: datetime, 
+                                         albedo: float = 0.7, slope_deg: float = 0.0, aspect_deg: float = 180.0) -> Tuple[float, float]:
     """
     Calculate Shortwave and Longwave equivalent temperature shifts considering complex terrain.
     
-    Args:
-        slope_deg (float): Slope angle in degrees (0 = flat).
-        aspect_deg (float): Slope aspect in degrees (0 = North, 90 = East, 180 = South).
+    :param t_air_f: Air temperature in Fahrenheit.
+    :type t_air_f: float
+    :param t_dew_f: Dew point temperature in Fahrenheit.
+    :type t_dew_f: float
+    :param cloud_pct: Cloud cover percentage (0-100).
+    :type cloud_pct: float
+    :param lat: Latitude in degrees.
+    :type lat: float
+    :param lon: Longitude in degrees.
+    :type lon: float
+    :param dt_aware: Timezone-aware datetime object.
+    :type dt_aware: datetime
+    :param albedo: Snow albedo (0.0 to 1.0).
+    :type albedo: float
+    :param slope_deg: Slope angle in degrees (0 = flat).
+    :type slope_deg: float
+    :param aspect_deg: Slope aspect in degrees (0 = North, 90 = East, 180 = South).
+    :type aspect_deg: float
+    :return: Tuple containing (Shortwave Equivalent Temp, Longwave Equivalent Temp).
+    :rtype: Tuple[float, float]
     """
     K_rad = 8.0  
     cloud_frac = cloud_pct / 100.0
@@ -167,11 +195,34 @@ def calculate_radiative_equivalent_temps(t_air_f, t_dew_f, cloud_pct, lat, lon, 
     return t_sw_eq, t_lw_eq
 
 
-def effective_temperature_f(t_wet_f, t_air_f, t_dew_f, cloud_pct, lat, lon, dt_aware, 
-                            albedo=0.7, slope_deg=0.0, aspect_deg=180.0):
+def effective_temperature_f(t_wet_f: Optional[float], t_air_f: float, t_dew_f: float, cloud_pct: float, lat: float, lon: float, dt_aware: datetime, 
+                            albedo: float = 0.7, slope_deg: float = 0.0, aspect_deg: float = 180.0) -> Optional[float]:
     """
     Computes the Total Effective Temperature combining wet-bulb and radiative effects.
     Defaults to flat terrain (slope_deg=0.0).
+    
+    :param t_wet_f: Wet-bulb temperature in Fahrenheit.
+    :type t_wet_f: Optional[float]
+    :param t_air_f: Air temperature in Fahrenheit.
+    :type t_air_f: float
+    :param t_dew_f: Dew point temperature in Fahrenheit.
+    :type t_dew_f: float
+    :param cloud_pct: Cloud cover percentage (0-100).
+    :type cloud_pct: float
+    :param lat: Latitude in degrees.
+    :type lat: float
+    :param lon: Longitude in degrees.
+    :type lon: float
+    :param dt_aware: Timezone-aware datetime object.
+    :type dt_aware: datetime
+    :param albedo: Snow albedo (0.0 to 1.0).
+    :type albedo: float
+    :param slope_deg: Slope angle in degrees (0 = flat).
+    :type slope_deg: float
+    :param aspect_deg: Slope aspect in degrees (0 = North, 90 = East, 180 = South).
+    :type aspect_deg: float
+    :return: The effective temperature in Fahrenheit, or None if input wet bulb is None.
+    :rtype: Optional[float]
     """
     if t_wet_f is None:
         return None
@@ -183,8 +234,17 @@ def effective_temperature_f(t_wet_f, t_air_f, t_dew_f, cloud_pct, lat, lon, dt_a
 
     return t_wet_f + t_sw_eq + t_lw_eq
 
-def calculate_snow_density(swe_mm, h0_snow_cm):
-    """Calculate realistic snow density from SWE and physical depth."""
+def calculate_snow_density(swe_mm: float, h0_snow_cm: float) -> float:
+    """
+    Calculate realistic snow density from SWE and physical depth.
+    
+    :param swe_mm: Snow water equivalent in millimeters.
+    :type swe_mm: float
+    :param h0_snow_cm: Physical snow depth in centimeters.
+    :type h0_snow_cm: float
+    :return: Calculated snow density (g/cm³).
+    :rtype: float
+    """
     if h0_snow_cm <= 0:
         return 0.05
     real_density = (swe_mm / 10.0) / h0_snow_cm
@@ -234,14 +294,14 @@ def calculate_freeze_depth(if_fhrs, K_F):
         return 0.0
     return K_F * math.sqrt(fhrs_to_c_days(if_fhrs))
 
-def calculate_dynamic_corn_window(real_density):
-    """Calculate dynamic corn window thresholds based on snow density.
+def calculate_dynamic_corn_window(real_density: float) -> Tuple[float, float]:
+    """
+    Calculate dynamic corn window thresholds based on snow density.
     
-    Args:
-        real_density (float): Estimated physical snow density (e.g., 0.35 for typical spring snow, 0.50 for firn).
-        
-    Returns:
-        tuple: (min_fhrs, max_fhrs) representing the dynamic corn window thresholds.
+    :param real_density: Estimated physical snow density (e.g., 0.35 for typical spring snow, 0.50 for firn).
+    :type real_density: float
+    :return: (min_fhrs, max_fhrs) representing the dynamic corn window thresholds.
+    :rtype: Tuple[float, float]
     """
     # Start: Energy required to overcome cold content (EFDH) and albedo.
     min_fhrs = 133.33 * real_density + 13.34

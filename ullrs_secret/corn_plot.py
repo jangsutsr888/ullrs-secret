@@ -13,9 +13,36 @@ from ullrs_secret.plot_utils import (
 )
 
 
-def plot_corn_forecast(times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
-                           slope_deg=0.0, aspect_deg=180.0, snow_density=0.5):
-    """Generate the effective temperature forecast chart with melt/freeze integral annotations for corn snow."""
+from typing import List, Optional
+from datetime import datetime
+import matplotlib.figure
+
+def plot_corn_forecast(times: List[datetime], adjusted_wbs: List[Optional[float]], effective_temps: List[Optional[float]], elevation_ft: float, lat: float, lon: float,
+                           slope_deg: float = 0.0, aspect_deg: float = 180.0, snow_density: float = 0.5) -> matplotlib.figure.Figure:
+    """
+    Generate the effective temperature forecast chart with melt/freeze integral annotations for corn snow.
+    
+    :param times: List of datetime objects for the x-axis.
+    :type times: List[datetime]
+    :param adjusted_wbs: List of wet bulb temperatures.
+    :type adjusted_wbs: List[Optional[float]]
+    :param effective_temps: List of calculated effective temperatures.
+    :type effective_temps: List[Optional[float]]
+    :param elevation_ft: Target elevation in feet.
+    :type elevation_ft: float
+    :param lat: Latitude in degrees.
+    :type lat: float
+    :param lon: Longitude in degrees.
+    :type lon: float
+    :param slope_deg: Slope angle in degrees (0 = flat).
+    :type slope_deg: float
+    :param aspect_deg: Slope aspect in degrees.
+    :type aspect_deg: float
+    :param snow_density: Estimated physical snow density.
+    :type snow_density: float
+    :return: A matplotlib figure object.
+    :rtype: matplotlib.figure.Figure
+    """
     fig, ax = plt.subplots(figsize=(20, 7))
 
     # Assume typical spring snow (density ~0.35) for depth annotations

@@ -1,4 +1,4 @@
-.PHONY: install clean
+.PHONY: install clean integration_test
 
 VENV := venv
 PYTHON := $(VENV)/bin/python
@@ -10,6 +10,9 @@ venv:
 
 install: venv
 	$(PIP) install -e .
+
+integration_test: install
+	$(PYTHON) integration_test/run.py
 
 clean:
 	rm -rf $(VENV) build/ dist/ *.egg-info
