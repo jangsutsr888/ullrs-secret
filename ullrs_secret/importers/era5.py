@@ -28,9 +28,9 @@ import cdsapi
 import pandas as pd
 import xarray as xr
 
-from . import register
-from .. import core
-from ..plot_utils import calculate_distance_miles, calculate_bearing
+from ullrs_secret.importers import register
+from ullrs_secret import core
+from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
 
 
 def _fetch_era5(lat, lon, start_date_str, end_date_str, tz_name):

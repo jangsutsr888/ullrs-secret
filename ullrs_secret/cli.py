@@ -2,11 +2,14 @@
 
 import click
 
-from .import_data import write_weather_json
-from .importers import get_registry
-from .consolidation_plot import run_consolidation_model
-from .pow_plot import run_pow_plot
-from .corn_plot import run_corn_plot
+from ullrs_secret.import_data import write_weather_json
+from ullrs_secret.importers import get_registry
+from ullrs_secret.consolidation_plot import run_consolidation_model
+from ullrs_secret.pow_plot import run_pow_plot
+from ullrs_secret.corn_plot import run_corn_plot
+from ullrs_secret.terrain import get_terrain_data
+from ullrs_secret.snotel import find_nearest_snotel_stations, get_snotel_report
+from datetime import datetime, timedelta
 
 
 @click.group()
@@ -74,7 +77,6 @@ def corn_plot(file, start, end, slope, aspect, elevation, density):
 @click.option("--lon", type=float, required=True, help="Longitude of the location (+ for East, - for West)")
 def terrain(lat, lon):
     """Calculate elevation, slope, and aspect for a coordinate."""
-    from .terrain import get_terrain_data
     
     try:
         data = get_terrain_data(lat, lon)
@@ -98,7 +100,6 @@ def terrain(lat, lon):
 @click.option("--lon", type=float, required=True, help="Longitude of the location (+ for East, - for West)")
 def snotel_list(lat, lon):
     """List the 5 nearest SNOTEL stations to a given coordinate."""
-    from .snotel import find_nearest_snotel_stations
     
     try:
         stations = find_nearest_snotel_stations(lat, lon, count=5)
@@ -126,8 +127,6 @@ def snotel_list(lat, lon):
 @click.option("--end", type=str, default=None, help="End date (YYYY-MM-DD). Defaults to today.")
 def snotel(site, elevation, start, end):
     """Fetch data for a specific SNOTEL station and infer snow depth at target elevation."""
-    from .snotel import get_snotel_report
-    from datetime import datetime
     
     try:
         start_date = datetime.strptime(start, "%Y-%m-%d") if start else None
@@ -182,7 +181,6 @@ def snotel(site, elevation, start, end):
             if i > 0:
                 prev_d = dates[i-1]
                 # Ensure the previous date is actually yesterday
-                from datetime import datetime, timedelta
                 curr_date_obj = datetime.strptime(d, "%Y-%m-%d")
                 prev_date_obj = datetime.strptime(prev_d, "%Y-%m-%d")
                 

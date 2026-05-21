@@ -3,7 +3,7 @@
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
-from .plot_utils import (
+from ullrs_secret.plot_utils import (
     PT_ZONE,
     compute_segment_integral,
     export_forecast_csv,

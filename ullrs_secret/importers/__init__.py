@@ -42,6 +42,6 @@ def get_registry():
     return dict(_REGISTRY)
 
 
-from . import nws  # noqa: E402, F401
-from . import era5  # noqa: E402, F401
-from . import openmeteo  # noqa: E402, F401
+from ullrs_secret.importers import nws  # noqa: E402, F401
+from ullrs_secret.importers import era5  # noqa: E402, F401
+from ullrs_secret.importers import openmeteo  # noqa: E402, F401

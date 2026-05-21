@@ -7,7 +7,7 @@ import click
 import pandas as pd
 import pytz
 
-from .core import (
+from ullrs_secret.core import (
     effective_temperature_f,
     get_dew_point_from_rh,
     get_rh_from_dew_point,

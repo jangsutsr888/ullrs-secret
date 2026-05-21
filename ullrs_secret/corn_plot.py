@@ -3,8 +3,8 @@
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
-from .core import get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth, calculate_dynamic_corn_window
-from .plot_utils import (
+from ullrs_secret.core import get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth, calculate_dynamic_corn_window
+from ullrs_secret.plot_utils import (
     PT_ZONE,
     compute_segment_integral,
     export_forecast_csv,

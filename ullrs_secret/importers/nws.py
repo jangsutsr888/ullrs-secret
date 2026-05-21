@@ -5,8 +5,8 @@ import xml.etree.ElementTree as ET
 
 import click
 
-from . import register
-from ..plot_utils import calculate_distance_miles, calculate_bearing
+from ullrs_secret.importers import register
+from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
 
 
 def _download(url):

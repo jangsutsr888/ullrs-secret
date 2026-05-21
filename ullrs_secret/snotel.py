@@ -5,7 +5,7 @@ import requests
 import click
 from datetime import datetime, timedelta
 
-from .plot_utils import calculate_distance_miles, calculate_bearing
+from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
 
 def find_nearest_snotel_stations(lat, lon, count=5, bbox_deg=2.0):
     """

@@ -8,7 +8,9 @@ import math
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
-from .plot_utils import (
+import matplotlib.patches as patches
+from ullrs_secret.core import calculate_snow_density, get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth, calculate_percolation_factor
+from ullrs_secret.plot_utils import (
     PT_ZONE,
     compute_segment_integral,
     export_forecast_csv,
@@ -139,7 +141,6 @@ def apply_freeze_phase(snowpack, current_If):
     using the non-linear Stefan equation.
     Returns the updated snowpack.
     """
-    import math
     remaining_If_c_days = current_If / 43.2
     current_z = 0.0
     
@@ -199,7 +200,6 @@ def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_sno
     Generate a focused chart showing the multi-layer snowpack profile progression.
     Visualizes Crust, Slush, and Dry Snow layers over time in a stacked rectangle format.
     """
-    import matplotlib.patches as patches
     
     fig, ax = plt.subplots(figsize=(20, 10))
 
@@ -216,7 +216,6 @@ def plot_d_total_curve(times, effective_temps, elevation_ft, swe_mm=30.0, h0_sno
     segments, crossing_times = find_crossings_and_segments(v_times, v_effs)
 
     # --- 2. Calculate Integrals & Dynamic Multi-Layer Model ---
-    from .core import calculate_snow_density, get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth, calculate_percolation_factor
 
     if snow_density is not None:
         real_density = max(0.05, min(0.60, snow_density))
