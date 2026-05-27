@@ -23,8 +23,9 @@ def _fetch_openmeteo(lat, lon, model, tz_name):
         "wind_speed_unit": "mph",
         "precipitation_unit": "inch",
         "timezone": "UTC",
-        "past_days": 0,
-        "forecast_days": 10,
+        "forecast_hours": 240,
+        #"past_days": 0,
+        #"forecast_days": 10,
         "models": model
     }
 

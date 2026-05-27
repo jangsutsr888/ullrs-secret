@@ -6,6 +6,7 @@ def main():
     lat = 46.19080
     lon = -121.49325
 
+
     print(f"Fetching terrain data for {lat}, {lon}...")
     terrain = ullrs.get_terrain_data(lat=lat, lon=lon)
     print(f"Terrain: Elevation: {terrain['elevation_ft']:.1f} ft, Slope: {terrain['slope_deg']:.1f}°, Aspect: {terrain['aspect_deg']:.1f}°")
