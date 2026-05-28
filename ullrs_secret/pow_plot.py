@@ -193,30 +193,4 @@ def plot_pow_forecast(times: List[datetime], adjusted_wbs: List[Optional[float]]
     return fig
 
 
-from typing import Optional
 
-def run_pow_plot(weather_data: dict, start_days: Optional[float] = None, end_days: Optional[float] = None, slope_deg: float = 0.0, aspect_deg: float = 180.0, target_elevation_ft: Optional[float] = None):
-    """
-    Load weather data, compute effective temps, generate pow forecast chart.
-    
-    :param weather_data: The standard weather data dictionary.
-    :type weather_data: dict
-    :param start_days: Start day offset (e.g. 0.0 for start of data).
-    :type start_days: Optional[float]
-    :param end_days: End day offset (e.g. 3.0). Defaults to end of data.
-    :type end_days: Optional[float]
-    :param slope_deg: Slope angle in degrees (0 = flat).
-    :type slope_deg: float
-    :param aspect_deg: Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).
-    :type aspect_deg: float
-    :param target_elevation_ft: Target elevation in ft (adjusts from data source elevation).
-    :type target_elevation_ft: Optional[float]
-    """
-    elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = (
-        prepare_effective_temp_data(weather_data, start_days=start_days, end_days=end_days, slope_deg=slope_deg, aspect_deg=aspect_deg,
-                                   target_elevation_ft=target_elevation_ft)
-    )
-
-    fig = plot_pow_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
-                           slope_deg=slope_deg, aspect_deg=aspect_deg)
-    return fig

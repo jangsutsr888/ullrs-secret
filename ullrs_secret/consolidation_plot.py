@@ -405,11 +405,4 @@ def plot_d_total_curve(times: List[datetime], effective_temps: List[Optional[flo
     return fig
 
 
-def run_consolidation_model(weather_data: dict, start_days=None, end_days=None, swe_mm=30.0, h0_snow_cm=20.0, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None, snow_density=None):
-    """Load weather data, compute effective temps via .core, generate D_total chart."""
-    elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
-        weather_data, start_days, end_days, slope_deg=slope_deg, aspect_deg=aspect_deg, target_elevation_ft=target_elevation_ft
-    )
 
-    fig = plot_d_total_curve(f_times, effective_temps, elevation_ft, swe_mm=swe_mm, h0_snow_cm=h0_snow_cm, slope_deg=slope_deg, aspect_deg=aspect_deg, snow_density=snow_density, lat=lat, lon=lon)
-    return fig

@@ -6,9 +6,10 @@ import matplotlib.pyplot as plt
 
 from ullrs_secret.import_data import write_weather_json
 from ullrs_secret.importers import get_registry
-from ullrs_secret.consolidation_plot import run_consolidation_model
-from ullrs_secret.pow_plot import run_pow_plot
-from ullrs_secret.corn_plot import run_corn_plot
+from ullrs_secret.plot_utils import prepare_effective_temp_data
+from ullrs_secret.consolidation_plot import plot_d_total_curve
+from ullrs_secret.pow_plot import plot_pow_forecast
+from ullrs_secret.corn_plot import plot_corn_forecast
 from ullrs_secret.terrain import get_terrain_data
 from ullrs_secret.snotel import find_nearest_snotel_stations, get_snotel_report
 from datetime import datetime, timedelta
@@ -30,22 +31,26 @@ def import_cmd():
 
 @cli.command("consolidation-plot")
 @click.argument("file", type=click.Path(exists=True))
-@click.option("--start", type=float, default=None, help="Start day offset (e.g. 0.0 for start of data).")
-@click.option("--end", type=float, default=None, help="End day offset (e.g. 3.0). Defaults to end of data.")
-@click.option("--swe", type=float, default=30.0, help="Snow water equivalent in mm.")
-@click.option("--depth", type=float, default=20.0, help="Physical snow depth in cm.")
-@click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat).")
-@click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).")
-@click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation).")
-@click.option("--density", type=float, default=None, help="Estimated snow density (e.g. 0.35 for typical spring snow). Overrides SWE if provided.")
+@click.option("--start", type=float, default=None, help="Start day offset (e.g. 0.0 for start of data). Default: None")
+@click.option("--end", type=float, default=None, help="End day offset (e.g. 3.0). Default: None (end of data)")
+@click.option("--swe", type=float, default=30.0, help="Snow water equivalent in mm. Default: 30.0")
+@click.option("--depth", type=float, default=20.0, help="Physical snow depth in cm. Default: 20.0")
+@click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat). Default: 0.0")
+@click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W). Default: 180.0")
+@click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation). Default: None")
+@click.option("--density", type=float, default=None, help="Estimated snow density (e.g. 0.35 for typical spring snow). Overrides SWE if provided. Default: None")
 @click.option('--no-show', is_flag=True, help="Do not display the plot window.")
-@click.option("-o", "--output", default="d_total_curve.png", help="Output filename for the plot chart.")
+@click.option("-o", "--output", default="d_total_curve.png", help="Output filename for the plot chart. Default: d_total_curve.png")
 def consolidation_plot(file, start, end, swe, depth, slope, aspect, elevation, density, no_show, output):
     """Compute melt-freeze consolidation model and plot D_total curve."""
     with open(file, "r", encoding="utf-8") as f:
         weather_data = json.load(f)
 
-    fig = run_consolidation_model(weather_data, start_days=start, end_days=end, swe_mm=swe, h0_snow_cm=depth, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation, snow_density=density)
+    elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
+        weather_data, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation
+    )
+
+    fig = plot_d_total_curve(f_times, effective_temps, elevation_ft, swe_mm=swe, h0_snow_cm=depth, slope_deg=slope, aspect_deg=aspect, snow_density=density, lat=lat, lon=lon)
     
     fig.savefig(output, dpi=150, bbox_inches="tight")
     click.echo(f"Chart saved to: {output}")
@@ -58,13 +63,13 @@ def consolidation_plot(file, start, end, swe, depth, slope, aspect, elevation, d
 
 @cli.command("pow-plot")
 @click.argument("file", type=click.Path(exists=True))
-@click.option("--start", type=float, default=None, help="Start day offset (e.g. 0.0 for start of data).")
-@click.option("--end", type=float, default=None, help="End day offset (e.g. 3.0). Defaults to end of data.")
-@click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat).")
-@click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).")
-@click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation).")
+@click.option("--start", type=float, default=None, help="Start day offset (e.g. 0.0 for start of data). Default: None")
+@click.option("--end", type=float, default=None, help="End day offset (e.g. 3.0). Default: None (end of data)")
+@click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat). Default: 0.0")
+@click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W). Default: 180.0")
+@click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation). Default: None")
 @click.option('--no-show', is_flag=True, help="Do not display the plot window.")
-@click.option("-o", "--output", default="pow_forecast_chart.png", help="Output filename for the plot chart.")
+@click.option("-o", "--output", default="pow_forecast_chart.png", help="Output filename for the plot chart. Default: pow_forecast_chart.png")
 def pow_plot(file, start, end, slope, aspect, elevation, no_show, output):
     """Read standard JSON, compute effective temps, generate powder preservation chart."""
     with open(file, "r", encoding="utf-8") as f:
@@ -83,20 +88,24 @@ def pow_plot(file, start, end, slope, aspect, elevation, no_show, output):
 
 @cli.command("corn-plot")
 @click.argument("file", type=click.Path(exists=True))
-@click.option("--start", type=float, default=None, help="Start day offset (e.g. 0.0 for start of data).")
-@click.option("--end", type=float, default=None, help="End day offset (e.g. 3.0). Defaults to end of data.")
-@click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat).")
-@click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W).")
-@click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation).")
-@click.option("--density", type=float, default=0.5, help="Estimated snow density (e.g. 0.35 for typical spring snow, 0.50 for firn).")
+@click.option("--start", type=float, default=None, help="Start day offset (e.g. 0.0 for start of data). Default: None")
+@click.option("--end", type=float, default=None, help="End day offset (e.g. 3.0). Default: None (end of data)")
+@click.option("--slope", type=float, default=0.0, help="Slope angle in degrees (0 = flat). Default: 0.0")
+@click.option("--aspect", type=float, default=180.0, help="Slope aspect in degrees (0=N, 90=E, 180=S, 270=W). Default: 180.0")
+@click.option("--elevation", type=float, default=None, help="Target elevation in ft (adjusts from data source elevation). Default: None")
+@click.option("--density", type=float, default=0.5, help="Estimated snow density (e.g. 0.35 for typical spring snow, 0.50 for firn). Default: 0.5")
 @click.option('--no-show', is_flag=True, help="Do not display the plot window.")
-@click.option("-o", "--output", default="corn_forecast_chart.png", help="Output filename for the plot chart.")
+@click.option("-o", "--output", default="corn_forecast_chart.png", help="Output filename for the plot chart. Default: corn_forecast_chart.png")
 def corn_plot(file, start, end, slope, aspect, elevation, density, no_show, output):
     """Read standard JSON, compute effective temps, generate corn snow chart."""
     with open(file, "r", encoding="utf-8") as f:
         weather_data = json.load(f)
 
-    fig = run_corn_plot(weather_data, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation, snow_density=density)
+    elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
+        weather_data, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation
+    )
+
+    fig = plot_corn_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon, slope_deg=slope, aspect_deg=aspect, snow_density=density)
     
     fig.savefig(output, dpi=150, bbox_inches="tight")
     click.echo(f"Chart saved to: {output}")
