@@ -49,10 +49,9 @@ def calculate_bearing(lat1, lon1, lat2, lon2):
     return dirs[ix % 16]
 
 
-def load_weather_data(json_path):
-    """Load standard weather JSON into a dict of parsed arrays."""
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+def load_weather_data(weather_data: dict):
+    """Load standard weather JSON dict into a dict of parsed arrays."""
+    data = weather_data
 
     times, temps_f, rh_values, dew_points_f, cloud_cover_pct = [], [], [], [], []
     for obs in data.get("observations", []):
@@ -112,32 +111,17 @@ def compute_segment_integral(seg_times, seg_wbs, threshold=32.0):
     return integral
 
 
-def export_forecast_csv(f_times, f_temps, f_rhs, adjusted_wbs, filename, effective_temps=None):
-    """Export forecast data to CSV."""
-    data = {
-        "Time_PT": [t.strftime("%Y-%m-%d %H:%M:%S") for t in f_times],
-        "Air_Temp_F": f_temps,
-        "Relative_Humidity_Pct": f_rhs,
-        "Adjusted_Wet_Bulb_F": adjusted_wbs,
-    }
-    if effective_temps is not None:
-        data["Effective_Temp_F"] = effective_temps
-    df = pd.DataFrame(data)
-    df.to_csv(filename, index=False)
-    print(f"Data saved to: {filename}")
-
-
 # ==========================================
 # Helper Functions: Data Preparation
 # ==========================================
 
-def prepare_effective_temp_data(json_path: str, start_days: Optional[float] = None, end_days: Optional[float] = None, slope_deg: float = 0.0, aspect_deg: float = 180.0, target_elevation_ft: Optional[float] = None) -> Tuple[float, float, float, List[datetime], List[float], List[float], List[Optional[float]], List[Optional[float]]]:
+def prepare_effective_temp_data(weather_data: dict, start_days: Optional[float] = None, end_days: Optional[float] = None, slope_deg: float = 0.0, aspect_deg: float = 180.0, target_elevation_ft: Optional[float] = None) -> Tuple[float, float, float, List[datetime], List[float], List[float], List[Optional[float]], List[Optional[float]]]:
     """
-    Load weather JSON, optionally adjust to a new elevation, and compute temperatures.
+    Load weather dict, optionally adjust to a new elevation, and compute temperatures.
 
     Returns (elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps).
-    
-    :param json_path: Path to the weather JSON file.
+
+    :param weather_data: Weather data dictionary.
     :param start_days: Start day offset.
     :param end_days: End day offset.
     :param slope_deg: Slope angle.
@@ -145,7 +129,7 @@ def prepare_effective_temp_data(json_path: str, start_days: Optional[float] = No
     :param target_elevation_ft: Target elevation in feet.
     :return: A tuple of computed parameters and time series.
     """
-    wd = load_weather_data(json_path)
+    wd = load_weather_data(weather_data)
     base_elevation_ft = wd["elevation_ft"]
     times = wd["times"]
     temps_f = wd["temps_f"]

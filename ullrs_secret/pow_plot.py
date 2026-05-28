@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from ullrs_secret.plot_utils import (
     PT_ZONE,
     compute_segment_integral,
-    export_forecast_csv,
     find_crossings_and_segments,
     prepare_effective_temp_data,
 )
@@ -191,19 +190,17 @@ def plot_pow_forecast(times: List[datetime], adjusted_wbs: List[Optional[float]]
         bbox=dict(facecolor="ghostwhite", alpha=0.9, edgecolor="lightgray", boxstyle="round,pad=1"),
     )
 
-    plt.savefig("pow_forecast_chart.png", dpi=150, bbox_inches="tight")
-    print(f"Chart saved to: pow_forecast_chart.png")
     return fig
 
 
 from typing import Optional
 
-def run_pow_plot(json_path: str, start_days: Optional[float] = None, end_days: Optional[float] = None, slope_deg: float = 0.0, aspect_deg: float = 180.0, target_elevation_ft: Optional[float] = None) -> None:
+def run_pow_plot(weather_data: dict, start_days: Optional[float] = None, end_days: Optional[float] = None, slope_deg: float = 0.0, aspect_deg: float = 180.0, target_elevation_ft: Optional[float] = None):
     """
-    Load weather data, compute effective temps, generate pow forecast chart and CSV.
+    Load weather data, compute effective temps, generate pow forecast chart.
     
-    :param json_path: Path to the standard weather JSON file.
-    :type json_path: str
+    :param weather_data: The standard weather data dictionary.
+    :type weather_data: dict
     :param start_days: Start day offset (e.g. 0.0 for start of data).
     :type start_days: Optional[float]
     :param end_days: End day offset (e.g. 3.0). Defaults to end of data.
@@ -216,13 +213,10 @@ def run_pow_plot(json_path: str, start_days: Optional[float] = None, end_days: O
     :type target_elevation_ft: Optional[float]
     """
     elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = (
-        prepare_effective_temp_data(json_path, start_days=start_days, end_days=end_days, slope_deg=slope_deg, aspect_deg=aspect_deg,
+        prepare_effective_temp_data(weather_data, start_days=start_days, end_days=end_days, slope_deg=slope_deg, aspect_deg=aspect_deg,
                                    target_elevation_ft=target_elevation_ft)
     )
 
-    plot_pow_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
+    fig = plot_pow_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
                            slope_deg=slope_deg, aspect_deg=aspect_deg)
-    export_forecast_csv(
-        f_times, f_temps, f_rhs, adjusted_wbs, "pow_forecast_data.csv",
-        effective_temps=effective_temps,
-    )
+    return fig

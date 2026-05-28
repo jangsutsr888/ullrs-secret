@@ -7,7 +7,6 @@ from ullrs_secret.core import get_consolidation_coefficients, calculate_melt_dep
 from ullrs_secret.plot_utils import (
     PT_ZONE,
     compute_segment_integral,
-    export_forecast_csv,
     find_crossings_and_segments,
     prepare_effective_temp_data,
 )
@@ -222,21 +221,16 @@ def plot_corn_forecast(times: List[datetime], adjusted_wbs: List[Optional[float]
         bbox=dict(facecolor="ghostwhite", alpha=0.9, edgecolor="lightgray", boxstyle="round,pad=1"),
     )
 
-    plt.savefig("corn_forecast_chart.png", dpi=150, bbox_inches="tight")
-    print(f"Chart saved to: corn_forecast_chart.png")
     return fig
 
 
-def run_corn_plot(json_path, start_days=None, end_days=None, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None, snow_density=0.5):
-    """Load weather data, compute effective temps, generate corn forecast chart and CSV."""
+def run_corn_plot(weather_data: dict, start_days=None, end_days=None, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None, snow_density=0.5):
+    """Load weather data, compute effective temps, generate corn forecast chart."""
     elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = (
-        prepare_effective_temp_data(json_path, start_days=start_days, end_days=end_days, slope_deg=slope_deg, aspect_deg=aspect_deg,
+        prepare_effective_temp_data(weather_data, start_days=start_days, end_days=end_days, slope_deg=slope_deg, aspect_deg=aspect_deg,
                                    target_elevation_ft=target_elevation_ft)
     )
 
-    plot_corn_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
+    fig = plot_corn_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon,
                            slope_deg=slope_deg, aspect_deg=aspect_deg, snow_density=snow_density)
-    export_forecast_csv(
-        f_times, f_temps, f_rhs, adjusted_wbs, "corn_forecast_data.csv",
-        effective_temps=effective_temps,
-    )
+    return fig

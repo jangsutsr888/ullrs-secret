@@ -13,7 +13,6 @@ from ullrs_secret.core import calculate_snow_density, get_consolidation_coeffici
 from ullrs_secret.plot_utils import (
     PT_ZONE,
     compute_segment_integral,
-    export_forecast_csv,
     find_crossings_and_segments,
     prepare_effective_temp_data,
 )
@@ -403,16 +402,14 @@ def plot_d_total_curve(times: List[datetime], effective_temps: List[Optional[flo
         bbox=dict(facecolor="ghostwhite", alpha=0.9, edgecolor="lightgray", boxstyle="round,pad=1"),
     )
 
-    plt.savefig("d_total_curve.png", dpi=150, bbox_inches="tight")
-    print(f"Chart saved to: d_total_curve.png")
     return fig
 
 
-def run_consolidation_model(json_path, start_days=None, end_days=None, swe_mm=30.0, h0_snow_cm=20.0, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None, snow_density=None):
-    """Load weather data, compute effective temps via .core, generate D_total chart and CSV."""
+def run_consolidation_model(weather_data: dict, start_days=None, end_days=None, swe_mm=30.0, h0_snow_cm=20.0, slope_deg=0.0, aspect_deg=180.0, target_elevation_ft=None, snow_density=None):
+    """Load weather data, compute effective temps via .core, generate D_total chart."""
     elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
-        json_path, start_days, end_days, slope_deg=slope_deg, aspect_deg=aspect_deg, target_elevation_ft=target_elevation_ft
+        weather_data, start_days, end_days, slope_deg=slope_deg, aspect_deg=aspect_deg, target_elevation_ft=target_elevation_ft
     )
 
-    plot_d_total_curve(f_times, effective_temps, elevation_ft, swe_mm=swe_mm, h0_snow_cm=h0_snow_cm, slope_deg=slope_deg, aspect_deg=aspect_deg, snow_density=snow_density, lat=lat, lon=lon)
-    export_forecast_csv(f_times, f_temps, f_rhs, adjusted_wbs, "consolidation_forecast_data.csv", effective_temps=effective_temps)
+    fig = plot_d_total_curve(f_times, effective_temps, elevation_ft, swe_mm=swe_mm, h0_snow_cm=h0_snow_cm, slope_deg=slope_deg, aspect_deg=aspect_deg, snow_density=snow_density, lat=lat, lon=lon)
+    return fig

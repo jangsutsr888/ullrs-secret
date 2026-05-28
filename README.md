@@ -230,7 +230,7 @@ Use `pow-plot` to forecast how long fresh powder will remain dry and light befor
 $ ullrs-secret pow-plot --help
 Usage: ullrs-secret pow-plot [OPTIONS] FILE
 
-  Read standard JSON, compute effective temps, generate powder preservation chart and CSV.
+  Read standard JSON, compute effective temps, generate powder preservation chart.
 
 Options:
   --start FLOAT      Start day offset (e.g. 0.0 for start of data).
@@ -257,7 +257,7 @@ Use `corn-plot` to predict the prime corn window for spring skiing. It models me
 $ ullrs-secret corn-plot --help
 Usage: ullrs-secret corn-plot [OPTIONS] FILE
 
-  Read standard JSON, compute effective temps, generate corn snow chart and CSV.
+  Read standard JSON, compute effective temps, generate corn snow chart.
 
 Options:
   --start FLOAT      Start day offset (e.g. 0.0 for start of data).
@@ -276,20 +276,17 @@ Options:
 $ ullrs-secret corn-plot --end 4.5 weather_data.json
 Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: corn_forecast_chart.png
-Data saved to: corn_forecast_data.csv
 
 # Southeast-facing 35° slope — typical steep corn line
 $ ullrs-secret corn-plot --end 4.5 --slope 35 --aspect 135 weather_data.json
 Working Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: corn_forecast_chart.png
-Data saved to: corn_forecast_data.csv
 
 # Adjust forecast to a higher elevation (data source at 9167 ft, target at 10500 ft)
 $ ullrs-secret corn-plot --end 4.5 --elevation 10500 weather_data.json
 Data adjusted from 9167.0 ft to target elevation: 10500.0 ft.
 Working Elevation: 10500.0 ft. Local pressure: 690.38 hPa
 Chart saved to: corn_forecast_chart.png
-Data saved to: corn_forecast_data.csv
 ```
 
 The `corn-plot` chart plots effective temperature as the primary curve with wet bulb as overlay, annotates each melt/freeze segment with its integral (F-hrs), and highlights the Prime Corn Window in green. 
@@ -340,7 +337,6 @@ Options:
 $ ullrs-secret consolidation-plot --end 4.5 --swe 40 --depth 25 weather_data.json
 Elevation: 9167.0 ft. Local pressure: 719.64 hPa
 Chart saved to: multi-layer-profile.png
-Data saved to: consolidation_forecast_data.csv
 ```
 
 This models how melt-freeze cycles structurally consolidate new snow into a supportable corn base. The core physics engine is a **Dynamic Multi-Layer Finite Element Simulation**.
@@ -404,11 +400,10 @@ print(f"Thermometer reads 35°F, but the slope feels: {effective_temp:.1f}°F")
 # 4. End-to-End Forecasting
 # Fetch weather data directly into memory
 weather_data = ullrs.fetch_weather("nws", lat=46.85, lon=-121.76)
-ullrs.write_weather_json(weather_data, "temp_weather.json")
 
 # Prepare effective temperature data series
 elevation_ft, lat, lon, times, temps, rhs, wbs, eff_temps = ullrs.prepare_effective_temp_data(
-    json_path="temp_weather.json",
+    weather_data=weather_data,
     slope_deg=35.0,
     aspect_deg=135.0,
     target_elevation_ft=9000.0
@@ -431,8 +426,6 @@ fig.savefig("my_custom_forecast.png")
 ## Output
 
 - `pow_forecast_chart.png` — powder preservation forecast chart (from `pow-plot`)
-- `pow_forecast_data.csv` — hourly data export with wet bulb and effective temp columns (from `pow-plot`)
 - `corn_forecast_chart.png` — corn snow forecast with melt/freeze integrals and corn window (from `corn-plot`)
-- `corn_forecast_data.csv` — hourly data export with wet bulb and effective temp columns (from `corn-plot`)
 - `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
-- `consolidation_forecast_data.csv` — consolidation model data export
+d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
