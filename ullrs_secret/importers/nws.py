@@ -9,6 +9,9 @@ from ullrs_secret.importers import register
 from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
 
 
+from ullrs_secret.cache import cached
+
+@cached("nws_download", maxsize=128, ttl=1800)
 def _download(url):
     req = urllib.request.Request(url, headers={
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",

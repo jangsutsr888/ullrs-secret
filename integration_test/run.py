@@ -1,4 +1,5 @@
 import os
+import time
 import matplotlib.pyplot as plt
 import ullrs_secret as ullrs
 
@@ -8,8 +9,22 @@ def main():
 
 
     print(f"Fetching terrain data for {lat}, {lon}...")
+    start_time = time.time()
     terrain = ullrs.get_terrain_data(lat=lat, lon=lon)
+    first_fetch_time = time.time() - start_time
     print(f"Terrain: Elevation: {terrain['elevation_ft']:.1f} ft, Slope: {terrain['slope_deg']:.1f}°, Aspect: {terrain['aspect_deg']:.1f}°")
+    print(f"First terrain fetch took {first_fetch_time:.4f} seconds")
+
+    print(f"Fetching terrain data for {lat}, {lon} AGAIN to verify cache...")
+    start_time = time.time()
+    terrain_cached = ullrs.get_terrain_data(lat=lat, lon=lon)
+    second_fetch_time = time.time() - start_time
+    print(f"Second terrain fetch (cached) took {second_fetch_time:.4f} seconds")
+    
+    # Ensure cache is working properly
+    assert second_fetch_time < first_fetch_time * 0.1, "Cache doesn't seem to be working, second fetch wasn't significantly faster"
+    assert terrain == terrain_cached, "Cached data mismatch"
+    print("Cache verified successfully!")
 
     print("Fetching weather data from Open-Meteo...")
     weather_data = ullrs.fetch_weather("openmeteo", lat=lat, lon=lon, model="best_match", timezone="America/Los_Angeles")

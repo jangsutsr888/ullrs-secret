@@ -77,6 +77,18 @@ The Universal Radiative Model utilizes an Effective Temperature ($T_{eff}$) inte
 * **Artificial Snow Composition (人造雪晶体):** On-piste environments often contain artificial snow, which consists of spherical ice pellets rather than natural dendritic crystals. This results in different baseline densities and moisture retention rates, altering the precise ETDH/EFDH thresholds needed for the Corn Cycle.
 * **Skier Traffic Impact (滑行切割效应):** High-traffic on-piste areas expose deeper snow layers mechanically. The constant churning accelerates the melting process during ETDH phases and creates unpredictable, rutted "coral reef" surfaces during the EFDH refreeze phase, unlike the uniform crusts found off-piste.
 
+## Caching
+
+`ullrs-secret` implements an in-memory LRU (Least Recently Used) cache to minimize redundant external network requests and speed up execution. 
+
+The caching system automatically tracks request parameters (like coordinates, station IDs, dates, and models) and caches the responses for:
+*   **Weather Importers:** Open-Meteo, NWS, and ERA5 data fetching.
+*   **SNOTEL:** Station search, metadata lookups, and historical data fetching.
+*   **Terrain Data:** Elevation, slope, and aspect calculations via the Open Topo Data API.
+
+**Architecture & Extensibility:**
+The caching layer is designed around an abstract `CacheBackend` interface. Currently, it uses a lightweight, size-based `LRUMemoryCacheBackend` (similar to `functools.lru_cache`) which is cleared when the process exits. However, the system is designed to be easily extensible; you can seamlessly swap out the memory backend for an external persistent cache (like Redis or Memcached) by implementing the `CacheBackend` protocol and calling `ullrs_secret.cache.set_default_backend()`.
+
 ## Prerequisite
 
 py3.10+ (only tested in py3.10)

@@ -10,6 +10,9 @@ from ullrs_secret import core
 from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
 
 
+from ullrs_secret.cache import cached
+
+@cached("openmeteo", maxsize=32, ttl=1800)
 def _fetch_openmeteo(lat, lon, model, tz_name):
     local_tz = pytz.timezone(tz_name)
 

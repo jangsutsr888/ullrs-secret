@@ -7,7 +7,9 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
 from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
+from ullrs_secret.cache import cached
 
+@cached("snotel_nearest", maxsize=32)
 def find_nearest_snotel_stations(lat, lon, count=5, bbox_deg=2.0):
     """
     Finds the nearest SNOTEL stations within a bounding box.
@@ -49,6 +51,7 @@ def find_nearest_snotel_stations(lat, lon, count=5, bbox_deg=2.0):
     valid_stations.sort(key=lambda x: x['distance_miles'])
     return valid_stations[:count]
 
+@cached("snotel_station_info", maxsize=128)
 def get_station_by_identifier(identifier):
     """Finds a station by its triplet or name."""
     # If it looks like a triplet
@@ -70,6 +73,7 @@ def get_station_by_identifier(identifier):
             
     raise ValueError(f"Could not find a SNOTEL station matching '{identifier}'.")
 
+@cached("snotel_data", maxsize=128, ttl=1800)
 def fetch_snotel_data(station_triplet, start_date_str, end_date_str):
     """
     Fetches daily SNWD and WTEQ data for a given station and time range.

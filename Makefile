@@ -9,7 +9,10 @@ venv:
 	$(PIP) install --upgrade pip 2>/dev/null || true
 
 install: venv
-	$(PIP) install -e .
+	$(PIP) install -e ".[test]"
+
+test: install
+	$(PYTHON) -m pytest tests/
 
 integration_test: install
 	$(PYTHON) integration_test/run.py

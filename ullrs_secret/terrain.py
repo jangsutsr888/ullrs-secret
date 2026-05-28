@@ -4,6 +4,9 @@ import math
 import requests
 from typing import Dict
 
+from ullrs_secret.cache import cached
+
+@cached("terrain", maxsize=128)
 def get_terrain_data(lat: float, lon: float) -> Dict[str, float]:
     """
     Fetch a 3x3 grid of elevations around (lat, lon) and calculate

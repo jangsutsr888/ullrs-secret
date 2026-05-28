@@ -33,6 +33,9 @@ from ullrs_secret import core
 from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
 
 
+from ullrs_secret.cache import cached
+
+@cached("era5", maxsize=32, ttl=1800)
 def _fetch_era5(lat, lon, start_date_str, end_date_str, tz_name):
     # Setup timezone and dates
     local_tz = pytz.timezone(tz_name)

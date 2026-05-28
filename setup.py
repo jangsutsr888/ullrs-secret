@@ -22,6 +22,9 @@ setup(
         "numpy",
         "requests",
     ],
+    extras_require={
+        "test": ["pytest"],
+    },
     entry_points={
         "console_scripts": [
             "ullrs-secret=ullrs_secret.cli:cli",
