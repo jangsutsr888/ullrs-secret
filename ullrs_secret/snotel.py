@@ -1,13 +1,13 @@
 """SNOTEL data fetching and processing."""
 
-import math
-import requests
-import click
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
-from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
+import requests
+
 from ullrs_secret.cache import cached
+from ullrs_secret.plot_utils import calculate_bearing, calculate_distance_miles
+
 
 @cached("snotel_nearest", maxsize=32)
 def find_nearest_snotel_stations(lat, lon, count=5, bbox_deg=2.0):

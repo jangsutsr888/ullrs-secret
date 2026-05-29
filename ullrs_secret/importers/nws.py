@@ -4,13 +4,12 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 import click
-from ullrs_secret.models import WeatherData, Observation
-
-from ullrs_secret.importers import register
-from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
-
 
 from ullrs_secret.cache import cached
+from ullrs_secret.importers import register
+from ullrs_secret.models import Observation, WeatherData
+from ullrs_secret.plot_utils import calculate_bearing, calculate_distance_miles
+
 
 @cached("nws_download", maxsize=128, ttl=1800)
 def _download(url):

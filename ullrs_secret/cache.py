@@ -1,9 +1,10 @@
 import collections
 import functools
-import json
 import hashlib
+import json
 import time
-from typing import Any, Callable, Dict, Optional, Protocol, Tuple
+from typing import Any, Callable, Optional, Protocol, Tuple
+
 
 class CacheBackend(Protocol):
     def get(self, key: str) -> Optional[Any]:

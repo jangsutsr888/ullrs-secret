@@ -1,12 +1,14 @@
 import argparse
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from datetime import timedelta
 import math
-from scipy.optimize import fsolve
-import pytz
 import sys
+from datetime import timedelta
+
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import pandas as pd
+import pytz
+from scipy.optimize import fsolve
+
 
 def es(T_c): return 6.112 * math.exp((17.67 * T_c) / (T_c + 243.5))
 def psychrometric_eq(Tw_c, T_c, e, P_hpa): return es(Tw_c) - P_hpa * 6.66e-4 * (1 + 0.00115 * Tw_c) * (T_c - Tw_c) - e

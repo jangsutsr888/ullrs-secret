@@ -6,15 +6,18 @@ calculate melt-freeze structural consolidation, and plot the D_total curve.
 import math
 
 import matplotlib.dates as mdates
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 
-import matplotlib.patches as patches
-from ullrs_secret.core import calculate_snow_density, get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth, calculate_percolation_factor
+from ullrs_secret.core import (
+    calculate_percolation_factor,
+    calculate_snow_density,
+    get_consolidation_coefficients,
+)
 from ullrs_secret.plot_utils import (
     PT_ZONE,
     compute_segment_integral,
     find_crossings_and_segments,
-    prepare_effective_temp_data,
 )
 
 
@@ -194,9 +197,11 @@ def apply_freeze_phase(snowpack, current_If):
     return consolidate_layers(new_snowpack)
 
 
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
 import matplotlib.figure
+
 
 def plot_d_total_curve(times: List[datetime], effective_temps: List[Optional[float]], elevation_ft: float, swe_mm: float = 30.0, h0_snow_cm: float = 20.0, slope_deg: float = 0.0, aspect_deg: float = 180.0, snow_density: Optional[float] = None, lat: Optional[float] = None, lon: Optional[float] = None) -> matplotlib.figure.Figure:
     """

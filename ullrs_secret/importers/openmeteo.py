@@ -1,17 +1,17 @@
 """Open-Meteo data importer (fast, high-resolution, multi-model)."""
 
-import click
-from ullrs_secret.models import WeatherData, Observation
-import requests
-import pytz
 from datetime import datetime
 
-from ullrs_secret.importers import register
+import click
+import pytz
+import requests
+
 from ullrs_secret import core
-from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
-
-
 from ullrs_secret.cache import cached
+from ullrs_secret.importers import register
+from ullrs_secret.models import Observation, WeatherData
+from ullrs_secret.plot_utils import calculate_bearing, calculate_distance_miles
+
 
 @cached("openmeteo", maxsize=32, ttl=1800)
 def _fetch_openmeteo(lat, lon, model, tz_name):

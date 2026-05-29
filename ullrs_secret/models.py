@@ -1,7 +1,8 @@
 import json
-from dataclasses import dataclass, asdict
-from typing import List, Optional, Tuple
+from dataclasses import asdict, dataclass
 from datetime import datetime
+from typing import List, Optional, Tuple
+
 import pytz
 
 PT_ZONE = pytz.timezone("America/Los_Angeles")

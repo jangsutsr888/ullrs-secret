@@ -1,14 +1,11 @@
 """Shared helpers for forecast and consolidation plot modules."""
 import math
-import json
 from datetime import datetime, timedelta
-from typing import Optional, Tuple, List
+from typing import List, Optional, Tuple
 
 import click
-import pandas as pd
 import pytz
 
-from ullrs_secret.models import WeatherData
 from ullrs_secret.core import (
     effective_temperature_f,
     get_dew_point_from_rh,
@@ -16,6 +13,7 @@ from ullrs_secret.core import (
     pressure_at_elevation,
     wet_bulb_f,
 )
+from ullrs_secret.models import WeatherData
 
 PT_ZONE = pytz.timezone("America/Los_Angeles")
 

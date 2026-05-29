@@ -44,6 +44,7 @@ def get_registry():
 
 from ullrs_secret.models import WeatherData
 
+
 def fetch_weather(source: str, **kwargs) -> WeatherData:
     """
     Fetch weather data using the specified importer source.
@@ -58,6 +59,8 @@ def fetch_weather(source: str, **kwargs) -> WeatherData:
     return importer["fetch"](**kwargs)
 
 
-from ullrs_secret.importers import nws  # noqa: E402, F401
-from ullrs_secret.importers import era5  # noqa: E402, F401
-from ullrs_secret.importers import openmeteo  # noqa: E402, F401
+from ullrs_secret.importers import (
+    era5,  # noqa: E402, F401
+    nws,  # noqa: E402, F401
+    openmeteo,  # noqa: E402, F401
+)

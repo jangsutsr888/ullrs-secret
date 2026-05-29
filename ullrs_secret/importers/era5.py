@@ -17,24 +17,22 @@ Prerequisites
 =============================================================================
 """
 
-import math
 import os
 import tempfile
 from datetime import datetime, timedelta
 
-import click
-from ullrs_secret.models import WeatherData, Observation
-import pytz
 import cdsapi
+import click
 import pandas as pd
+import pytz
 import xarray as xr
 
-from ullrs_secret.importers import register
 from ullrs_secret import core
-from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
-
-
 from ullrs_secret.cache import cached
+from ullrs_secret.importers import register
+from ullrs_secret.models import Observation, WeatherData
+from ullrs_secret.plot_utils import calculate_bearing, calculate_distance_miles
+
 
 @cached("era5", maxsize=32, ttl=1800)
 def _fetch_era5(lat, lon, start_date_str, end_date_str, tz_name):

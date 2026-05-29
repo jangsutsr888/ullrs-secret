@@ -1,7 +1,9 @@
-import os
 import time
+
 import matplotlib.pyplot as plt
+
 import ullrs_secret as ullrs
+
 
 def main():
     lat = 46.19080

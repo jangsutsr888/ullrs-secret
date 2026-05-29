@@ -1,10 +1,12 @@
 """Terrain calculations using Open Topo Data."""
 
 import math
-import requests
 from typing import Dict
 
+import requests
+
 from ullrs_secret.cache import cached
+
 
 @cached("terrain", maxsize=128)
 def get_terrain_data(lat: float, lon: float) -> Dict[str, float]:

@@ -1,20 +1,24 @@
 """Read standard weather JSON, compute effective temperatures, plot and export corn snow forecast."""
 
+from datetime import datetime
+from typing import List, Optional
+
 import matplotlib.dates as mdates
+import matplotlib.figure
 import matplotlib.pyplot as plt
 
-from ullrs_secret.core import get_consolidation_coefficients, calculate_melt_depth, calculate_freeze_depth, calculate_dynamic_corn_window
+from ullrs_secret.core import (
+    calculate_dynamic_corn_window,
+    calculate_freeze_depth,
+    calculate_melt_depth,
+    get_consolidation_coefficients,
+)
 from ullrs_secret.plot_utils import (
     PT_ZONE,
     compute_segment_integral,
     find_crossings_and_segments,
-    prepare_effective_temp_data,
 )
 
-
-from typing import List, Optional
-from datetime import datetime
-import matplotlib.figure
 
 def plot_corn_forecast(times: List[datetime], adjusted_wbs: List[Optional[float]], effective_temps: List[Optional[float]], elevation_ft: float, lat: float, lon: float,
                            slope_deg: float = 0.0, aspect_deg: float = 180.0, snow_density: float = 0.5) -> matplotlib.figure.Figure:

@@ -1,19 +1,18 @@
 """Read standard weather JSON, compute effective temperatures, plot and export powder snow preservation forecast."""
 
+from datetime import datetime
+from typing import List, Optional
+
 import matplotlib.dates as mdates
+import matplotlib.figure
 import matplotlib.pyplot as plt
 
 from ullrs_secret.plot_utils import (
     PT_ZONE,
     compute_segment_integral,
     find_crossings_and_segments,
-    prepare_effective_temp_data,
 )
 
-
-from typing import List, Optional
-from datetime import datetime
-import matplotlib.figure
 
 def plot_pow_forecast(times: List[datetime], adjusted_wbs: List[Optional[float]], effective_temps: List[Optional[float]], elevation_ft: float, lat: float, lon: float,
                            slope_deg: float = 0.0, aspect_deg: float = 180.0) -> matplotlib.figure.Figure:

@@ -1,7 +1,9 @@
 import time
-import pytest
 from unittest.mock import MagicMock
-from ullrs_secret.cache import LRUMemoryCacheBackend, cached, set_default_backend
+
+
+from ullrs_secret.cache import LRUMemoryCacheBackend, cached
+
 
 def test_lru_cache_backend_set_get():
     cache = LRUMemoryCacheBackend(maxsize=3)
