@@ -12,7 +12,6 @@ from ullrs_secret.core import (
 )
 from ullrs_secret.terrain import get_terrain_data
 from ullrs_secret.snotel import find_nearest_snotel_stations, get_snotel_report
-from ullrs_secret.import_data import write_weather_json
 from ullrs_secret.pow_plot import plot_pow_forecast
 from ullrs_secret.corn_plot import plot_corn_forecast
 from ullrs_secret.consolidation_plot import plot_d_total_curve
@@ -34,8 +33,8 @@ __all__ = [
     "find_nearest_snotel_stations",
     "get_snotel_report",
     
-    # Utilities
-    "write_weather_json",
+    # Models
+    "WeatherData",
     
     # Importers
     "get_importer",

@@ -23,6 +23,7 @@ import tempfile
 from datetime import datetime, timedelta
 
 import click
+from ullrs_secret.models import WeatherData, Observation
 import pytz
 import cdsapi
 import pandas as pd
@@ -130,25 +131,25 @@ def _fetch_era5(lat, lon, start_date_str, end_date_str, tz_name):
             
             time_iso = row['local_time'].isoformat()
             
-            observations.append({
-                "time_iso": time_iso,
-                "air_temp_f": round(temp_f, 2),
-                "relative_humidity_pct": round(rh_percent, 2) if rh_percent is not None else None,
-                "dew_point_f": round(dew_point_f, 2),
-                "cloud_cover_pct": round(cloud_cover_pct, 2) if cloud_cover_pct is not None else None,
-            })
+            observations.append(Observation(
+                time_iso=time_iso,
+                air_temp_f=round(temp_f, 2),
+                relative_humidity_pct=round(rh_percent, 2) if rh_percent is not None else None,
+                dew_point_f=round(dew_point_f, 2),
+                cloud_cover_pct=round(cloud_cover_pct, 2) if cloud_cover_pct is not None else None,
+            ))
             
     finally:
         if os.path.exists(filename):
             os.remove(filename)
             
-    return {
-        "source": "era5",
-        "latitude": grid_lat,
-        "longitude": grid_lon,
-        "elevation_ft": elevation_ft,
-        "observations": observations,
-    }
+    return WeatherData(
+        source="era5",
+        latitude=grid_lat,
+        longitude=grid_lon,
+        elevation_ft=elevation_ft,
+        observations=observations,
+    )
 
 
 ERA5_DECORATORS = [
@@ -162,4 +163,5 @@ ERA5_DECORATORS = [
 @register("era5", decorators=ERA5_DECORATORS)
 def fetch(lat, lon, start_date, end_date, timezone):
     """Fetch and parse ERA5 reanalysis data via Copernicus CDS API."""
+    return _fetch_era5(lat, lon, start_date, end_date, timezone)
     return _fetch_era5(lat, lon, start_date, end_date, timezone)

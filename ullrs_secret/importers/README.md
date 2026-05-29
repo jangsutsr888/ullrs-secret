@@ -138,7 +138,7 @@ To add a new data source, create a file in `ullrs_secret/importers/` (e.g., `spo
 import click
 
 from . import register
-
+from ullrs_secret.models import WeatherData, Observation
 
 # Define whatever Click arguments/options your source needs.
 # NWS just takes a URL, but yours might need an API key, coordinates, etc.
@@ -152,23 +152,23 @@ SPOTWX_DECORATORS = [
 @register("spotwx", decorators=SPOTWX_DECORATORS)
 def fetch(api_key, lat, lon):
     """Fetch weather data from SpotWx API."""
-    # Your fetch logic here — must return the standard dict:
-    return {
-        "source": "spotwx",
-        "latitude": 49.0,
-        "longitude": -122.5,
-        "elevation_ft": 6500.0,
-        "observations": [
-            {
-                "time_iso": "2026-04-29T12:00:00-07:00",
-                "air_temp_f": 28.0,
-                "relative_humidity_pct": 72.0,
-                "dew_point_f": 20.0,
-                "cloud_cover_pct": 55.0,
-            },
+    # Your fetch logic here — must return a WeatherData object:
+    return WeatherData(
+        source="spotwx",
+        latitude=49.0,
+        longitude=-122.5,
+        elevation_ft=6500.0,
+        observations=[
+            Observation(
+                time_iso="2026-04-29T12:00:00-07:00",
+                air_temp_f=28.0,
+                relative_humidity_pct=72.0,
+                dew_point_f=20.0,
+                cloud_cover_pct=55.0,
+            ),
             # ...
         ],
-    }
+    )
 ```
 
 Then register it in `ullrs_secret/importers/__init__.py`:

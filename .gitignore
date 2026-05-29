@@ -5,7 +5,7 @@ build/
 venv/
 *.pyc
 downloaded_data.tmp
-weather_data.json
+*.json
 *.png
 !example/*.png
 *.csv

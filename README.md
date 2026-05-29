@@ -113,9 +113,11 @@ Options:
 
 Commands:
   consolidation-plot  Compute melt-freeze consolidation model and plot...
+  corn-plot           Read standard JSON, compute effective temps, generate...
   import              Import weather data from a source into standard JSON.
-  plot                Read standard JSON, compute effective temps,...
-  snotel              Fetch nearest SNOTEL station data and infer snow...
+  pow-plot            Read standard JSON, compute effective temps, generate...
+  snotel-list         List the 5 nearest SNOTEL stations to a given...
+  snotel-report       Fetch data for a specific SNOTEL station and infer...
   terrain             Calculate elevation, slope, and aspect for a...
 ```
 
@@ -182,16 +184,16 @@ Swamp Creek               | 3930 ft    | 13.6 mi    | ENE        | 975:WA:SNTL
 Rainy Pass                | 4880 ft    | 14.5 mi    | E          | 711:WA:SNTL
 Lyman Lake                | 5990 ft    | 20.6 mi    | SSE        | 606:WA:SNTL
 
-Use 'ullrs-secret snotel --site "<Identifier or Name>"' to fetch data for a specific station.
+Use 'ullrs-secret snotel-report --site "<Identifier or Name>"' to fetch data for a specific station.
 ```
 
 #### 2. Fetch snow data
 
-The `snotel` command fetches historical Snow Depth, Snow Water Equivalent (SWE), daily snow, and daily density data for a specific station. It can also infer the expected snow depth at your target elevation.
+The `snotel-report` command fetches historical Snow Depth, Snow Water Equivalent (SWE), daily snow, and daily density data for a specific station. It can also infer the expected snow depth at your target elevation.
 
 ```
-$ ullrs-secret snotel --help
-Usage: ullrs-secret snotel [OPTIONS]
+$ ullrs-secret snotel-report --help
+Usage: ullrs-secret snotel-report [OPTIONS]
 
   Fetch data for a specific SNOTEL station and infer snow depth at target elevation.
 
@@ -206,7 +208,7 @@ Options:
 
 Example:
 ```
-$ ullrs-secret snotel --site "Lyman Lake" --elevation 7000
+$ ullrs-secret snotel-report --site "Lyman Lake" --elevation 7000
 SNOTEL Station: Lyman Lake (606:WA:SNTL)
   Elevation: 5990 ft
 
@@ -440,4 +442,6 @@ fig.savefig("my_custom_forecast.png")
 - `pow_forecast_chart.png` — powder preservation forecast chart (from `pow-plot`)
 - `corn_forecast_chart.png` — corn snow forecast with melt/freeze integrals and corn window (from `corn-plot`)
 - `d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
+d_total_curve.png` — consolidation model chart (from `consolidation-plot`)
+� consolidation model chart (from `consolidation-plot`)
 d_total_curve.png` — consolidation model chart (from `consolidation-plot`)

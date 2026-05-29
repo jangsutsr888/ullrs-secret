@@ -4,6 +4,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 import click
+from ullrs_secret.models import WeatherData, Observation
 
 from ullrs_secret.importers import register
 from ullrs_secret.plot_utils import calculate_distance_miles, calculate_bearing
@@ -74,22 +75,22 @@ def _parse_xml(xml_data, input_lat, input_lon):
     min_len = min(len(times), len(temps_f), len(rh_values))
     observations = []
     for i in range(min_len):
-        obs = {
-            "time_iso": times[i],
-            "air_temp_f": temps_f[i],
-            "relative_humidity_pct": rh_values[i],
-            "dew_point_f": dew_points_f[i] if i < len(dew_points_f) else None,
-            "cloud_cover_pct": cloud_cover_pct[i] if i < len(cloud_cover_pct) else None,
-        }
+        obs = Observation(
+            time_iso=times[i],
+            air_temp_f=temps_f[i],
+            relative_humidity_pct=rh_values[i],
+            dew_point_f=dew_points_f[i] if i < len(dew_points_f) else None,
+            cloud_cover_pct=cloud_cover_pct[i] if i < len(cloud_cover_pct) else None,
+        )
         observations.append(obs)
 
-    return {
-        "source": "nws",
-        "latitude": latitude,
-        "longitude": longitude,
-        "elevation_ft": elevation_ft,
-        "observations": observations,
-    }
+    return WeatherData(
+        source="nws",
+        latitude=latitude,
+        longitude=longitude,
+        elevation_ft=elevation_ft,
+        observations=observations,
+    )
 
 
 NWS_DECORATORS = [

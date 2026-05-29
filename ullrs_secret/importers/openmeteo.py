@@ -1,6 +1,7 @@
 """Open-Meteo data importer (fast, high-resolution, multi-model)."""
 
 import click
+from ullrs_secret.models import WeatherData, Observation
 import requests
 import pytz
 from datetime import datetime
@@ -85,21 +86,21 @@ def _fetch_openmeteo(lat, lon, model, tz_name):
             
         cloud_pct = float(clouds[i]) if clouds[i] is not None else None
 
-        observations.append({
-            "time_iso": dt_local.isoformat(),
-            "air_temp_f": round(temp_f, 2),
-            "relative_humidity_pct": round(rh_pct, 2) if rh_pct is not None else None,
-            "dew_point_f": round(dew_f, 2) if dew_f is not None else None,
-            "cloud_cover_pct": round(cloud_pct, 2) if cloud_pct is not None else None,
-        })
+        observations.append(Observation(
+            time_iso=dt_local.isoformat(),
+            air_temp_f=round(temp_f, 2),
+            relative_humidity_pct=round(rh_pct, 2) if rh_pct is not None else None,
+            dew_point_f=round(dew_f, 2) if dew_f is not None else None,
+            cloud_cover_pct=round(cloud_pct, 2) if cloud_pct is not None else None,
+        ))
 
-    return {
-        "source": f"openmeteo_{model}",
-        "latitude": grid_lat,
-        "longitude": grid_lon,
-        "elevation_ft": elevation_ft,
-        "observations": observations,
-    }
+    return WeatherData(
+        source=f"openmeteo_{model}",
+        latitude=grid_lat,
+        longitude=grid_lon,
+        elevation_ft=elevation_ft,
+        observations=observations,
+    )
 
 
 # Map user-friendly names to Open-Meteo's API model strings

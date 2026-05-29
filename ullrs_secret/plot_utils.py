@@ -8,6 +8,7 @@ import click
 import pandas as pd
 import pytz
 
+from ullrs_secret.models import WeatherData
 from ullrs_secret.core import (
     effective_temperature_f,
     get_dew_point_from_rh,
@@ -115,13 +116,13 @@ def compute_segment_integral(seg_times, seg_wbs, threshold=32.0):
 # Helper Functions: Data Preparation
 # ==========================================
 
-def prepare_effective_temp_data(weather_data: dict, start_days: Optional[float] = None, end_days: Optional[float] = None, slope_deg: float = 0.0, aspect_deg: float = 180.0, target_elevation_ft: Optional[float] = None) -> Tuple[float, float, float, List[datetime], List[float], List[float], List[Optional[float]], List[Optional[float]]]:
+def prepare_effective_temp_data(weather_data: WeatherData, start_days: Optional[float] = None, end_days: Optional[float] = None, slope_deg: float = 0.0, aspect_deg: float = 180.0, target_elevation_ft: Optional[float] = None) -> Tuple[float, float, float, List[datetime], List[float], List[float], List[Optional[float]], List[Optional[float]]]:
     """
-    Load weather dict, optionally adjust to a new elevation, and compute temperatures.
+    Load weather dataclass, optionally adjust to a new elevation, and compute temperatures.
 
     Returns (elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps).
 
-    :param weather_data: Weather data dictionary.
+    :param weather_data: WeatherData object.
     :param start_days: Start day offset.
     :param end_days: End day offset.
     :param slope_deg: Slope angle.
@@ -129,15 +130,10 @@ def prepare_effective_temp_data(weather_data: dict, start_days: Optional[float] 
     :param target_elevation_ft: Target elevation in feet.
     :return: A tuple of computed parameters and time series.
     """
-    wd = load_weather_data(weather_data)
-    base_elevation_ft = wd["elevation_ft"]
-    times = wd["times"]
-    temps_f = wd["temps_f"]
-    rh_values = wd["rh_values"]
-    dew_points_f = wd["dew_points_f"]
-    cloud_cover_pct = wd["cloud_cover_pct"]
-    lat = wd["latitude"]
-    lon = wd["longitude"]
+    base_elevation_ft = weather_data.elevation_ft
+    times, temps_f, rh_values, dew_points_f, cloud_cover_pct = weather_data.to_timeseries()
+    lat = weather_data.latitude
+    lon = weather_data.longitude
 
     if not times:
         raise click.ClickException("No valid time series data found in JSON.")
@@ -217,5 +213,8 @@ def prepare_effective_temp_data(weather_data: dict, start_days: Optional[float] 
             )
         else:
             effective_temps.append(None)
+
+    return current_elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps
+    effective_temps.append(None)
 
     return current_elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps

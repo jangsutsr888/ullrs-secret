@@ -1,10 +1,9 @@
 """Unified CLI for ullrs-secret."""
 
 import click
-import json
 import matplotlib.pyplot as plt
 
-from ullrs_secret.import_data import write_weather_json
+from ullrs_secret.models import WeatherData
 from ullrs_secret.importers import get_registry
 from ullrs_secret.plot_utils import prepare_effective_temp_data
 from ullrs_secret.consolidation_plot import plot_d_total_curve
@@ -43,8 +42,7 @@ def import_cmd():
 @click.option("-o", "--output", default="d_total_curve.png", help="Output filename for the plot chart. Default: d_total_curve.png")
 def consolidation_plot(file, start, end, swe, depth, slope, aspect, elevation, density, no_show, output):
     """Compute melt-freeze consolidation model and plot D_total curve."""
-    with open(file, "r", encoding="utf-8") as f:
-        weather_data = json.load(f)
+    weather_data = WeatherData.from_json_file(file)
 
     elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
         weather_data, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation
@@ -72,10 +70,13 @@ def consolidation_plot(file, start, end, swe, depth, slope, aspect, elevation, d
 @click.option("-o", "--output", default="pow_forecast_chart.png", help="Output filename for the plot chart. Default: pow_forecast_chart.png")
 def pow_plot(file, start, end, slope, aspect, elevation, no_show, output):
     """Read standard JSON, compute effective temps, generate powder preservation chart."""
-    with open(file, "r", encoding="utf-8") as f:
-        weather_data = json.load(f)
+    weather_data = WeatherData.from_json_file(file)
 
-    fig = run_pow_plot(weather_data, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation)
+    elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
+        weather_data, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation
+    )
+
+    fig = plot_pow_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon, slope_deg=slope, aspect_deg=aspect)
     
     fig.savefig(output, dpi=150, bbox_inches="tight")
     click.echo(f"Chart saved to: {output}")
@@ -98,8 +99,7 @@ def pow_plot(file, start, end, slope, aspect, elevation, no_show, output):
 @click.option("-o", "--output", default="corn_forecast_chart.png", help="Output filename for the plot chart. Default: corn_forecast_chart.png")
 def corn_plot(file, start, end, slope, aspect, elevation, density, no_show, output):
     """Read standard JSON, compute effective temps, generate corn snow chart."""
-    with open(file, "r", encoding="utf-8") as f:
-        weather_data = json.load(f)
+    weather_data = WeatherData.from_json_file(file)
 
     elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
         weather_data, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation
@@ -286,7 +286,7 @@ def _build_import_command(name, entry):
     @click.option("-o", "--output", default="weather_data.json", help="Output JSON path.")
     def cmd(output, **kwargs):
         data = fetch_fn(**kwargs)
-        write_weather_json(data, output)
+        data.to_json_file(output)
 
     for dec in reversed(decorators):
         cmd = dec(cmd)

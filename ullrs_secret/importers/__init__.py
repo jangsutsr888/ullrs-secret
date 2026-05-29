@@ -42,15 +42,17 @@ def get_registry():
     return dict(_REGISTRY)
 
 
-def fetch_weather(source: str, **kwargs) -> dict:
+from ullrs_secret.models import WeatherData
+
+def fetch_weather(source: str, **kwargs) -> WeatherData:
     """
     Fetch weather data using the specified importer source.
     
     :param source: The name of the importer to use (e.g., 'nws', 'era5', 'openmeteo').
     :type source: str
     :param kwargs: Arguments passed directly to the specific importer's fetch function.
-    :return: A dictionary containing standard weather JSON data.
-    :rtype: dict
+    :return: A WeatherData object containing the standard weather data.
+    :rtype: WeatherData
     """
     importer = get_importer(source)
     return importer["fetch"](**kwargs)
