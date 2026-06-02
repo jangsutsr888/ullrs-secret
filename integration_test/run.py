@@ -34,7 +34,7 @@ def main():
     print("Preparing effective temperature data...")
     # By default, openmeteo provides about 7 days of forecast. The prompt asks for 5 days.
     # We can pass end_days=5.0 to prepare_effective_temp_data
-    elevation_ft, data_lat, data_lon, times, temps, rhs, wbs, eff_temps = ullrs.prepare_effective_temp_data(
+    elevation_ft, data_lat, data_lon, times, eff_temps = ullrs.prepare_effective_temp_data(
         weather_data=weather_data,
         end_days=5.0,
         slope_deg=terrain['slope_deg'],
@@ -45,7 +45,6 @@ def main():
     print("Generating corn plot...")
     fig = ullrs.plot_corn_forecast(
         times=times,
-        adjusted_wbs=wbs,
         effective_temps=eff_temps,
         elevation_ft=elevation_ft,
         lat=lat,

@@ -20,15 +20,13 @@ from ullrs_secret.plot_utils import (
 )
 
 
-def plot_corn_forecast(times: List[datetime], adjusted_wbs: List[Optional[float]], effective_temps: List[Optional[float]], elevation_ft: float, lat: float, lon: float,
+def plot_corn_forecast(times: List[datetime], effective_temps: List[Optional[float]], elevation_ft: float, lat: float, lon: float,
                            slope_deg: float = 0.0, aspect_deg: float = 180.0, snow_density: float = 0.5) -> matplotlib.figure.Figure:
     """
     Generate the effective temperature forecast chart with melt/freeze integral annotations for corn snow.
     
     :param times: List of datetime objects for the x-axis.
     :type times: List[datetime]
-    :param adjusted_wbs: List of wet bulb temperatures.
-    :type adjusted_wbs: List[Optional[float]]
     :param effective_temps: List of calculated effective temperatures.
     :type effective_temps: List[Optional[float]]
     :param elevation_ft: Target elevation in feet.
@@ -151,8 +149,6 @@ def plot_corn_forecast(times: List[datetime], adjusted_wbs: List[Optional[float]
 
     ax.plot(times, effective_temps, marker="o", markersize=5, linestyle="-", color="teal",
             label="Effective Temperature", zorder=4)
-    ax.plot(times, adjusted_wbs, marker=".", markersize=4, linestyle="-", color="orange",
-            alpha=0.6, label="Wet Bulb Temp", zorder=3)
     ax.axhline(y=32, color="red", linestyle="--", linewidth=2,
                label="Freezing Point (32°F)", zorder=5)
 
@@ -178,10 +174,10 @@ def plot_corn_forecast(times: List[datetime], adjusted_wbs: List[Optional[float]
     ax.grid(True, which="major", axis="y", color="gray", linestyle="--", alpha=0.5)
 
     if valid_data:
-        all_vals = v_eff + [w for w in adjusted_wbs if w is not None]
+        all_vals = v_eff
         ax.set_ylim(
             bottom=min(all_vals) - 4,
-            top=max(all_vals) + 4,
+            top=max(all_vals) + 4
         )
 
     plt.xticks(rotation=45, ha="right", fontsize=12)

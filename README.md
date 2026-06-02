@@ -416,7 +416,7 @@ print(f"Thermometer reads 35°F, but the slope feels: {effective_temp:.1f}°F")
 weather_data = ullrs.fetch_weather("nws", lat=46.85, lon=-121.76)
 
 # Prepare effective temperature data series
-elevation_ft, lat, lon, times, temps, rhs, wbs, eff_temps = ullrs.prepare_effective_temp_data(
+elevation_ft, lat, lon, times, eff_temps = ullrs.prepare_effective_temp_data(
     weather_data=weather_data,
     slope_deg=35.0,
     aspect_deg=135.0,
@@ -426,7 +426,6 @@ elevation_ft, lat, lon, times, temps, rhs, wbs, eff_temps = ullrs.prepare_effect
 # Generate and save a forecast chart
 fig = ullrs.plot_corn_forecast(
     times=times, 
-    adjusted_wbs=wbs, 
     effective_temps=eff_temps, 
     elevation_ft=elevation_ft, 
     lat=lat, 

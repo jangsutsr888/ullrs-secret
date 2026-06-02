@@ -114,11 +114,11 @@ def compute_segment_integral(seg_times, seg_wbs, threshold=32.0):
 # Helper Functions: Data Preparation
 # ==========================================
 
-def prepare_effective_temp_data(weather_data: WeatherData, start_days: Optional[float] = None, end_days: Optional[float] = None, slope_deg: float = 0.0, aspect_deg: float = 180.0, target_elevation_ft: Optional[float] = None) -> Tuple[float, float, float, List[datetime], List[float], List[float], List[Optional[float]], List[Optional[float]]]:
+def prepare_effective_temp_data(weather_data: WeatherData, start_days: Optional[float] = None, end_days: Optional[float] = None, slope_deg: float = 0.0, aspect_deg: float = 180.0, target_elevation_ft: Optional[float] = None) -> Tuple[float, float, float, List[datetime], List[Optional[float]], List[Optional[float]]]:
     """
     Load weather dataclass, optionally adjust to a new elevation, and compute temperatures.
 
-    Returns (elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps).
+    Returns (elevation_ft, lat, lon, f_times, effective_temps).
 
     :param weather_data: WeatherData object.
     :param start_days: Start day offset.
@@ -212,7 +212,4 @@ def prepare_effective_temp_data(weather_data: WeatherData, start_days: Optional[
         else:
             effective_temps.append(None)
 
-    return current_elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps
-    effective_temps.append(None)
-
-    return current_elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps
+    return current_elevation_ft, lat, lon, f_times, effective_temps

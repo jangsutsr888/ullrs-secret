@@ -45,7 +45,7 @@ def consolidation_plot(file, start, end, swe, depth, slope, aspect, elevation, d
     """Compute melt-freeze consolidation model and plot D_total curve."""
     weather_data = WeatherData.from_json_file(file)
 
-    elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
+    elevation_ft, lat, lon, f_times, effective_temps = prepare_effective_temp_data(
         weather_data, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation
     )
 
@@ -73,11 +73,11 @@ def pow_plot(file, start, end, slope, aspect, elevation, no_show, output):
     """Read standard JSON, compute effective temps, generate powder preservation chart."""
     weather_data = WeatherData.from_json_file(file)
 
-    elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
+    elevation_ft, lat, lon, f_times, effective_temps = prepare_effective_temp_data(
         weather_data, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation
     )
 
-    fig = plot_pow_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon, slope_deg=slope, aspect_deg=aspect)
+    fig = plot_pow_forecast(f_times, effective_temps, elevation_ft, lat, lon, slope_deg=slope, aspect_deg=aspect)
     
     fig.savefig(output, dpi=150, bbox_inches="tight")
     click.echo(f"Chart saved to: {output}")
@@ -102,11 +102,11 @@ def corn_plot(file, start, end, slope, aspect, elevation, density, no_show, outp
     """Read standard JSON, compute effective temps, generate corn snow chart."""
     weather_data = WeatherData.from_json_file(file)
 
-    elevation_ft, lat, lon, f_times, f_temps, f_rhs, adjusted_wbs, effective_temps = prepare_effective_temp_data(
+    elevation_ft, lat, lon, f_times, effective_temps = prepare_effective_temp_data(
         weather_data, start_days=start, end_days=end, slope_deg=slope, aspect_deg=aspect, target_elevation_ft=elevation
     )
 
-    fig = plot_corn_forecast(f_times, adjusted_wbs, effective_temps, elevation_ft, lat, lon, slope_deg=slope, aspect_deg=aspect, snow_density=density)
+    fig = plot_corn_forecast(f_times, effective_temps, elevation_ft, lat, lon, slope_deg=slope, aspect_deg=aspect, snow_density=density)
     
     fig.savefig(output, dpi=150, bbox_inches="tight")
     click.echo(f"Chart saved to: {output}")
