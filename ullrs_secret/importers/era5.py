@@ -20,6 +20,7 @@ Prerequisites
 import os
 import tempfile
 from datetime import datetime, timedelta
+import logging
 
 import cdsapi
 import click
@@ -32,6 +33,8 @@ from ullrs_secret.cache import cached
 from ullrs_secret.importers import register
 from ullrs_secret.models import Observation, WeatherData
 from ullrs_secret.plot_utils import calculate_bearing, calculate_distance_miles
+
+logger = logging.getLogger(__name__)
 
 
 @cached("era5", maxsize=32, ttl=1800)
@@ -96,8 +99,8 @@ def _fetch_era5(lat, lon, start_date_str, end_date_str, tz_name):
 
         distance_miles = calculate_distance_miles(lat, lon, grid_lat, grid_lon)
         bearing = calculate_bearing(lat, lon, grid_lat, grid_lon)
-        click.echo(f"Matched nearest ERA5 grid point: Lat {grid_lat:.2f}, Lon {grid_lon:.2f}")
-        click.echo(f"Distance from input location: {distance_miles:.2f} miles ({bearing})")
+        logger.info(f"Matched nearest ERA5 grid point: Lat {grid_lat:.2f}, Lon {grid_lon:.2f}")
+        logger.info(f"Distance from input location: {distance_miles:.2f} miles ({bearing})")
         
         # Geopotential z = m^2/s^2, z / 9.80665 = m
         z_val = float(point_data['z'].values.flatten()[0])

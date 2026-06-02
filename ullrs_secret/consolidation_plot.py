@@ -4,6 +4,7 @@ calculate melt-freeze structural consolidation, and plot the D_total curve.
 """
 
 import math
+import logging
 
 import matplotlib.dates as mdates
 import matplotlib.patches as patches
@@ -19,6 +20,8 @@ from ullrs_secret.plot_utils import (
     compute_segment_integral,
     find_crossings_and_segments,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def consolidate_layers(snowpack):
@@ -237,7 +240,7 @@ def plot_d_total_curve(times: List[datetime], effective_temps: List[Optional[flo
     valid_data = [(t, e) for t, e in zip(times, effective_temps) if e is not None]
 
     if not valid_data:
-        print("No valid data to plot.")
+        logger.info("No valid data to plot.")
         return fig
 
     v_times = [d[0] for d in valid_data]

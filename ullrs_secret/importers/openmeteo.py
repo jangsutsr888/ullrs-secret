@@ -1,6 +1,7 @@
 """Open-Meteo data importer (fast, high-resolution, multi-model)."""
 
 from datetime import datetime
+import logging
 
 import click
 import pytz
@@ -11,6 +12,8 @@ from ullrs_secret.cache import cached
 from ullrs_secret.importers import register
 from ullrs_secret.models import Observation, WeatherData
 from ullrs_secret.plot_utils import calculate_bearing, calculate_distance_miles
+
+logger = logging.getLogger(__name__)
 
 
 @cached("openmeteo", maxsize=32, ttl=1800)
@@ -33,7 +36,7 @@ def _fetch_openmeteo(lat, lon, model, tz_name):
         "models": model
     }
 
-    click.echo(f"Fetching forecast from Open-Meteo API (model: {model}) for {lat:.4f}, {lon:.4f}...")
+    logger.info(f"Fetching forecast from Open-Meteo API (model: {model}) for {lat:.4f}, {lon:.4f}...")
     response = requests.get(url, params=params)
     response.raise_for_status()
     data = response.json()
@@ -44,14 +47,14 @@ def _fetch_openmeteo(lat, lon, model, tz_name):
 
     distance_miles = calculate_distance_miles(lat, lon, grid_lat, grid_lon)
     bearing = calculate_bearing(lat, lon, grid_lat, grid_lon)
-    click.echo(f"Matched nearest grid point: Lat {grid_lat:.4f}, Lon {grid_lon:.4f}")
-    click.echo(f"Distance from input location: {distance_miles:.2f} miles ({bearing})")
+    logger.info(f"Matched nearest grid point: Lat {grid_lat:.4f}, Lon {grid_lon:.4f}")
+    logger.info(f"Distance from input location: {distance_miles:.2f} miles ({bearing})")
     # Open-Meteo automatically applies statistical downscaling to correct temperatures
     # and dew points to a high-resolution 90m Digital Elevation Model (DEM).
     # We must use THIS elevation as our baseline to prevent double-dipping on lapse rates.
     elevation_m = data.get("elevation", 0.0)
     elevation_ft = elevation_m * 3.28084
-    click.echo(f"Open-Meteo downscaled elevation: {elevation_ft:.1f} ft ({elevation_m:.1f} m)")
+    logger.info(f"Open-Meteo downscaled elevation: {elevation_ft:.1f} ft ({elevation_m:.1f} m)")
     
     hourly = data.get("hourly", {})
     times = hourly.get("time", [])

@@ -3,6 +3,15 @@ Ullr's Secret — backcountry ski snow conditions forecaster.
 Public API Module
 """
 
+import logging
+import sys
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    stream=sys.stdout
+)
+
 from ullrs_secret.consolidation_plot import plot_d_total_curve
 from ullrs_secret.core import (
     calculate_dynamic_corn_window,

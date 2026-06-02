@@ -1,5 +1,6 @@
 """Shared helpers for forecast and consolidation plot modules."""
 import math
+import logging
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 
@@ -14,6 +15,8 @@ from ullrs_secret.core import (
     wet_bulb_f,
 )
 from ullrs_secret.models import WeatherData
+
+logger = logging.getLogger(__name__)
 
 PT_ZONE = pytz.timezone("America/Los_Angeles")
 
@@ -186,11 +189,11 @@ def prepare_effective_temp_data(weather_data: WeatherData, start_days: Optional[
                 f_rhs[i] = get_rh_from_dew_point(t1, td1)
                 
         current_elevation_ft = target_elevation_ft
-        print(f"Data adjusted from {base_elevation_ft} ft to target elevation: {current_elevation_ft} ft.")
+        logger.info(f"Data adjusted from {base_elevation_ft} ft to target elevation: {current_elevation_ft} ft.")
 
     # 3. Calculate local pressure at the working elevation
     p_hpa = pressure_at_elevation(current_elevation_ft)
-    print(f"Working Elevation: {current_elevation_ft} ft. Local pressure: {p_hpa:.2f} hPa")
+    logger.info(f"Working Elevation: {current_elevation_ft} ft. Local pressure: {p_hpa:.2f} hPa")
 
     # 4. Compute wet bulb temperatures using updated temps, RH, and pressure
     adjusted_wbs = []

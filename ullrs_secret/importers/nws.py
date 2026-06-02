@@ -2,6 +2,7 @@
 
 import urllib.request
 import xml.etree.ElementTree as ET
+import logging
 
 import click
 
@@ -9,6 +10,8 @@ from ullrs_secret.cache import cached
 from ullrs_secret.importers import register
 from ullrs_secret.models import Observation, WeatherData
 from ullrs_secret.plot_utils import calculate_bearing, calculate_distance_miles
+
+logger = logging.getLogger(__name__)
 
 
 @cached("nws_download", maxsize=128, ttl=1800)
@@ -51,8 +54,8 @@ def _parse_xml(xml_data, input_lat, input_lon):
     if latitude is not None and longitude is not None:
         distance_miles = calculate_distance_miles(input_lat, input_lon, latitude, longitude)
         bearing = calculate_bearing(input_lat, input_lon, latitude, longitude)
-        click.echo(f"Matched nearest NWS grid point: Lat {latitude:.4f}, Lon {longitude:.4f}")
-        click.echo(f"Distance from input location: {distance_miles:.2f} miles ({bearing})")
+        logger.info(f"Matched nearest NWS grid point: Lat {latitude:.4f}, Lon {longitude:.4f}")
+        logger.info(f"Distance from input location: {distance_miles:.2f} miles ({bearing})")
 
     height_elem = root.find(".//location/height")
     elevation_ft = float(height_elem.text) if height_elem is not None else 0.0

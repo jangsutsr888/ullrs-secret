@@ -1,9 +1,12 @@
 import json
+import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import List, Optional, Tuple
 
 import pytz
+
+logger = logging.getLogger(__name__)
 
 PT_ZONE = pytz.timezone("America/Los_Angeles")
 
@@ -60,7 +63,7 @@ class WeatherData:
     def to_json_file(self, filepath: str) -> None:
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, indent=2, ensure_ascii=False)
-        print(f"Wrote {len(self.observations)} observations to {filepath}")
+        logger.info(f"Wrote {len(self.observations)} observations to {filepath}")
 
     def to_timeseries(self) -> Tuple[List[datetime], List[float], List[Optional[float]], List[Optional[float]], List[Optional[float]]]:
         times = []

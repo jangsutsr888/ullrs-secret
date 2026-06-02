@@ -14,7 +14,6 @@ from ullrs_secret.pow_plot import plot_pow_forecast
 from ullrs_secret.snotel import find_nearest_snotel_stations, get_snotel_report
 from ullrs_secret.terrain import get_terrain_data
 
-
 @click.group()
 def cli():
     """Ullr's Secret — backcountry ski snow conditions forecaster."""
