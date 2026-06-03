@@ -15,7 +15,9 @@ test: install
 	$(PYTHON) -m pytest tests/
 
 integration_test: install
-	$(PYTHON) integration_test/run.py
+	$(PYTHON) integration_test/run_pow.py
+	$(PYTHON) integration_test/run_consolidation.py
+	$(PYTHON) integration_test/run_corn.py
 
 clean:
 	rm -rf $(VENV) build/ dist/ *.egg-info

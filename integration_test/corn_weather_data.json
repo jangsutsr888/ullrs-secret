@@ -1,0 +1,512 @@
+{
+  "source": "era5",
+  "latitude": 47.5,
+  "longitude": -121.0,
+  "elevation_ft": 4130.439006096947,
+  "observations": [
+    {
+      "time_iso": "2026-04-24T00:00:00-07:00",
+      "air_temp_f": 31.23,
+      "relative_humidity_pct": 99.12,
+      "dew_point_f": 31.01,
+      "cloud_cover_pct": 58.91
+    },
+    {
+      "time_iso": "2026-04-24T01:00:00-07:00",
+      "air_temp_f": 28.89,
+      "relative_humidity_pct": 100.0,
+      "dew_point_f": 28.89,
+      "cloud_cover_pct": 66.07
+    },
+    {
+      "time_iso": "2026-04-24T02:00:00-07:00",
+      "air_temp_f": 29.94,
+      "relative_humidity_pct": 97.29,
+      "dew_point_f": 29.27,
+      "cloud_cover_pct": 90.23
+    },
+    {
+      "time_iso": "2026-04-24T03:00:00-07:00",
+      "air_temp_f": 30.35,
+      "relative_humidity_pct": 97.7,
+      "dew_point_f": 29.78,
+      "cloud_cover_pct": 99.15
+    },
+    {
+      "time_iso": "2026-04-24T04:00:00-07:00",
+      "air_temp_f": 28.9,
+      "relative_humidity_pct": 98.1,
+      "dew_point_f": 28.43,
+      "cloud_cover_pct": 99.91
+    },
+    {
+      "time_iso": "2026-04-24T05:00:00-07:00",
+      "air_temp_f": 28.49,
+      "relative_humidity_pct": 96.26,
+      "dew_point_f": 27.56,
+      "cloud_cover_pct": 78.23
+    },
+    {
+      "time_iso": "2026-04-24T06:00:00-07:00",
+      "air_temp_f": 28.2,
+      "relative_humidity_pct": 95.68,
+      "dew_point_f": 27.13,
+      "cloud_cover_pct": 63.0
+    },
+    {
+      "time_iso": "2026-04-24T07:00:00-07:00",
+      "air_temp_f": 28.73,
+      "relative_humidity_pct": 87.83,
+      "dew_point_f": 25.59,
+      "cloud_cover_pct": 53.14
+    },
+    {
+      "time_iso": "2026-04-24T08:00:00-07:00",
+      "air_temp_f": 31.7,
+      "relative_humidity_pct": 78.28,
+      "dew_point_f": 25.72,
+      "cloud_cover_pct": 2.51
+    },
+    {
+      "time_iso": "2026-04-24T09:00:00-07:00",
+      "air_temp_f": 35.51,
+      "relative_humidity_pct": 60.5,
+      "dew_point_f": 23.2,
+      "cloud_cover_pct": 0.02
+    },
+    {
+      "time_iso": "2026-04-24T10:00:00-07:00",
+      "air_temp_f": 39.35,
+      "relative_humidity_pct": 46.95,
+      "dew_point_f": 20.77,
+      "cloud_cover_pct": 1.59
+    },
+    {
+      "time_iso": "2026-04-24T11:00:00-07:00",
+      "air_temp_f": 41.26,
+      "relative_humidity_pct": 46.9,
+      "dew_point_f": 22.5,
+      "cloud_cover_pct": 16.08
+    },
+    {
+      "time_iso": "2026-04-24T12:00:00-07:00",
+      "air_temp_f": 42.7,
+      "relative_humidity_pct": 48.11,
+      "dew_point_f": 24.43,
+      "cloud_cover_pct": 38.63
+    },
+    {
+      "time_iso": "2026-04-24T13:00:00-07:00",
+      "air_temp_f": 45.67,
+      "relative_humidity_pct": 33.84,
+      "dew_point_f": 18.79,
+      "cloud_cover_pct": 32.14
+    },
+    {
+      "time_iso": "2026-04-24T14:00:00-07:00",
+      "air_temp_f": 46.84,
+      "relative_humidity_pct": 31.44,
+      "dew_point_f": 18.11,
+      "cloud_cover_pct": 42.77
+    },
+    {
+      "time_iso": "2026-04-24T15:00:00-07:00",
+      "air_temp_f": 47.48,
+      "relative_humidity_pct": 24.09,
+      "dew_point_f": 12.54,
+      "cloud_cover_pct": 82.63
+    },
+    {
+      "time_iso": "2026-04-24T16:00:00-07:00",
+      "air_temp_f": 48.38,
+      "relative_humidity_pct": 23.25,
+      "dew_point_f": 12.51,
+      "cloud_cover_pct": 86.97
+    },
+    {
+      "time_iso": "2026-04-24T17:00:00-07:00",
+      "air_temp_f": 48.08,
+      "relative_humidity_pct": 23.9,
+      "dew_point_f": 12.89,
+      "cloud_cover_pct": 73.43
+    },
+    {
+      "time_iso": "2026-04-24T18:00:00-07:00",
+      "air_temp_f": 47.14,
+      "relative_humidity_pct": 26.95,
+      "dew_point_f": 14.81,
+      "cloud_cover_pct": 54.19
+    },
+    {
+      "time_iso": "2026-04-24T19:00:00-07:00",
+      "air_temp_f": 45.17,
+      "relative_humidity_pct": 30.18,
+      "dew_point_f": 15.7,
+      "cloud_cover_pct": 46.4
+    },
+    {
+      "time_iso": "2026-04-24T20:00:00-07:00",
+      "air_temp_f": 41.7,
+      "relative_humidity_pct": 41.96,
+      "dew_point_f": 20.27,
+      "cloud_cover_pct": 18.73
+    },
+    {
+      "time_iso": "2026-04-24T21:00:00-07:00",
+      "air_temp_f": 42.01,
+      "relative_humidity_pct": 41.23,
+      "dew_point_f": 20.14,
+      "cloud_cover_pct": 5.11
+    },
+    {
+      "time_iso": "2026-04-24T22:00:00-07:00",
+      "air_temp_f": 37.44,
+      "relative_humidity_pct": 50.59,
+      "dew_point_f": 20.77,
+      "cloud_cover_pct": 4.03
+    },
+    {
+      "time_iso": "2026-04-24T23:00:00-07:00",
+      "air_temp_f": 38.41,
+      "relative_humidity_pct": 42.68,
+      "dew_point_f": 17.68,
+      "cloud_cover_pct": 0.52
+    },
+    {
+      "time_iso": "2026-04-25T00:00:00-07:00",
+      "air_temp_f": 37.2,
+      "relative_humidity_pct": 44.82,
+      "dew_point_f": 17.72,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-25T01:00:00-07:00",
+      "air_temp_f": 32.03,
+      "relative_humidity_pct": 58.47,
+      "dew_point_f": 19.11,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-25T02:00:00-07:00",
+      "air_temp_f": 31.71,
+      "relative_humidity_pct": 59.51,
+      "dew_point_f": 19.22,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-25T03:00:00-07:00",
+      "air_temp_f": 28.2,
+      "relative_humidity_pct": 70.03,
+      "dew_point_f": 19.69,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-25T04:00:00-07:00",
+      "air_temp_f": 27.44,
+      "relative_humidity_pct": 69.86,
+      "dew_point_f": 18.9,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-25T05:00:00-07:00",
+      "air_temp_f": 27.1,
+      "relative_humidity_pct": 69.43,
+      "dew_point_f": 18.43,
+      "cloud_cover_pct": 2.88
+    },
+    {
+      "time_iso": "2026-04-25T06:00:00-07:00",
+      "air_temp_f": 27.29,
+      "relative_humidity_pct": 69.04,
+      "dew_point_f": 18.48,
+      "cloud_cover_pct": 16.12
+    },
+    {
+      "time_iso": "2026-04-25T07:00:00-07:00",
+      "air_temp_f": 29.08,
+      "relative_humidity_pct": 66.88,
+      "dew_point_f": 19.45,
+      "cloud_cover_pct": 28.86
+    },
+    {
+      "time_iso": "2026-04-25T08:00:00-07:00",
+      "air_temp_f": 33.88,
+      "relative_humidity_pct": 62.49,
+      "dew_point_f": 22.43,
+      "cloud_cover_pct": 3.86
+    },
+    {
+      "time_iso": "2026-04-25T09:00:00-07:00",
+      "air_temp_f": 36.63,
+      "relative_humidity_pct": 53.21,
+      "dew_point_f": 21.21,
+      "cloud_cover_pct": 0.48
+    },
+    {
+      "time_iso": "2026-04-25T10:00:00-07:00",
+      "air_temp_f": 41.05,
+      "relative_humidity_pct": 45.54,
+      "dew_point_f": 21.61,
+      "cloud_cover_pct": 26.89
+    },
+    {
+      "time_iso": "2026-04-25T11:00:00-07:00",
+      "air_temp_f": 43.71,
+      "relative_humidity_pct": 28.64,
+      "dew_point_f": 13.23,
+      "cloud_cover_pct": 88.38
+    },
+    {
+      "time_iso": "2026-04-25T12:00:00-07:00",
+      "air_temp_f": 45.06,
+      "relative_humidity_pct": 26.76,
+      "dew_point_f": 12.85,
+      "cloud_cover_pct": 94.97
+    },
+    {
+      "time_iso": "2026-04-25T13:00:00-07:00",
+      "air_temp_f": 45.57,
+      "relative_humidity_pct": 36.6,
+      "dew_point_f": 20.54,
+      "cloud_cover_pct": 100.0
+    },
+    {
+      "time_iso": "2026-04-25T14:00:00-07:00",
+      "air_temp_f": 47.11,
+      "relative_humidity_pct": 31.97,
+      "dew_point_f": 18.73,
+      "cloud_cover_pct": 100.0
+    },
+    {
+      "time_iso": "2026-04-25T15:00:00-07:00",
+      "air_temp_f": 48.65,
+      "relative_humidity_pct": 25.41,
+      "dew_point_f": 14.76,
+      "cloud_cover_pct": 81.45
+    },
+    {
+      "time_iso": "2026-04-25T16:00:00-07:00",
+      "air_temp_f": 49.02,
+      "relative_humidity_pct": 26.94,
+      "dew_point_f": 16.42,
+      "cloud_cover_pct": 99.89
+    },
+    {
+      "time_iso": "2026-04-25T17:00:00-07:00",
+      "air_temp_f": 48.51,
+      "relative_humidity_pct": 27.67,
+      "dew_point_f": 16.6,
+      "cloud_cover_pct": 98.98
+    },
+    {
+      "time_iso": "2026-04-25T18:00:00-07:00",
+      "air_temp_f": 47.99,
+      "relative_humidity_pct": 29.12,
+      "dew_point_f": 17.34,
+      "cloud_cover_pct": 99.04
+    },
+    {
+      "time_iso": "2026-04-25T19:00:00-07:00",
+      "air_temp_f": 46.1,
+      "relative_humidity_pct": 31.63,
+      "dew_point_f": 17.6,
+      "cloud_cover_pct": 50.41
+    },
+    {
+      "time_iso": "2026-04-25T20:00:00-07:00",
+      "air_temp_f": 42.46,
+      "relative_humidity_pct": 50.31,
+      "dew_point_f": 25.29,
+      "cloud_cover_pct": 26.97
+    },
+    {
+      "time_iso": "2026-04-25T21:00:00-07:00",
+      "air_temp_f": 45.81,
+      "relative_humidity_pct": 39.8,
+      "dew_point_f": 22.74,
+      "cloud_cover_pct": 1.08
+    },
+    {
+      "time_iso": "2026-04-25T22:00:00-07:00",
+      "air_temp_f": 40.26,
+      "relative_humidity_pct": 52.59,
+      "dew_point_f": 24.31,
+      "cloud_cover_pct": 2.74
+    },
+    {
+      "time_iso": "2026-04-25T23:00:00-07:00",
+      "air_temp_f": 38.2,
+      "relative_humidity_pct": 56.24,
+      "dew_point_f": 23.99,
+      "cloud_cover_pct": 3.8
+    },
+    {
+      "time_iso": "2026-04-26T00:00:00-07:00",
+      "air_temp_f": 38.03,
+      "relative_humidity_pct": 56.88,
+      "dew_point_f": 24.1,
+      "cloud_cover_pct": 5.65
+    },
+    {
+      "time_iso": "2026-04-26T01:00:00-07:00",
+      "air_temp_f": 35.35,
+      "relative_humidity_pct": 63.48,
+      "dew_point_f": 24.19,
+      "cloud_cover_pct": 0.02
+    },
+    {
+      "time_iso": "2026-04-26T02:00:00-07:00",
+      "air_temp_f": 35.44,
+      "relative_humidity_pct": 63.01,
+      "dew_point_f": 24.1,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-26T03:00:00-07:00",
+      "air_temp_f": 32.07,
+      "relative_humidity_pct": 66.56,
+      "dew_point_f": 22.2,
+      "cloud_cover_pct": 43.68
+    },
+    {
+      "time_iso": "2026-04-26T04:00:00-07:00",
+      "air_temp_f": 31.05,
+      "relative_humidity_pct": 66.99,
+      "dew_point_f": 21.38,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-26T05:00:00-07:00",
+      "air_temp_f": 31.09,
+      "relative_humidity_pct": 66.28,
+      "dew_point_f": 21.16,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-26T06:00:00-07:00",
+      "air_temp_f": 31.52,
+      "relative_humidity_pct": 64.57,
+      "dew_point_f": 20.96,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-26T07:00:00-07:00",
+      "air_temp_f": 33.02,
+      "relative_humidity_pct": 61.94,
+      "dew_point_f": 21.4,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-26T08:00:00-07:00",
+      "air_temp_f": 36.25,
+      "relative_humidity_pct": 56.28,
+      "dew_point_f": 22.17,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-26T09:00:00-07:00",
+      "air_temp_f": 39.02,
+      "relative_humidity_pct": 51.0,
+      "dew_point_f": 22.42,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-26T10:00:00-07:00",
+      "air_temp_f": 44.09,
+      "relative_humidity_pct": 38.99,
+      "dew_point_f": 20.7,
+      "cloud_cover_pct": 29.74
+    },
+    {
+      "time_iso": "2026-04-26T11:00:00-07:00",
+      "air_temp_f": 46.03,
+      "relative_humidity_pct": 32.85,
+      "dew_point_f": 18.42,
+      "cloud_cover_pct": 47.02
+    },
+    {
+      "time_iso": "2026-04-26T12:00:00-07:00",
+      "air_temp_f": 48.24,
+      "relative_humidity_pct": 27.59,
+      "dew_point_f": 16.3,
+      "cloud_cover_pct": 40.59
+    },
+    {
+      "time_iso": "2026-04-26T13:00:00-07:00",
+      "air_temp_f": 49.83,
+      "relative_humidity_pct": 25.45,
+      "dew_point_f": 15.81,
+      "cloud_cover_pct": 52.13
+    },
+    {
+      "time_iso": "2026-04-26T14:00:00-07:00",
+      "air_temp_f": 50.04,
+      "relative_humidity_pct": 25.4,
+      "dew_point_f": 15.95,
+      "cloud_cover_pct": 66.74
+    },
+    {
+      "time_iso": "2026-04-26T15:00:00-07:00",
+      "air_temp_f": 50.59,
+      "relative_humidity_pct": 28.04,
+      "dew_point_f": 18.71,
+      "cloud_cover_pct": 76.02
+    },
+    {
+      "time_iso": "2026-04-26T16:00:00-07:00",
+      "air_temp_f": 49.58,
+      "relative_humidity_pct": 32.7,
+      "dew_point_f": 21.43,
+      "cloud_cover_pct": 45.62
+    },
+    {
+      "time_iso": "2026-04-26T17:00:00-07:00",
+      "air_temp_f": 47.77,
+      "relative_humidity_pct": 38.72,
+      "dew_point_f": 23.84,
+      "cloud_cover_pct": 41.34
+    },
+    {
+      "time_iso": "2026-04-26T18:00:00-07:00",
+      "air_temp_f": 47.78,
+      "relative_humidity_pct": 38.51,
+      "dew_point_f": 23.72,
+      "cloud_cover_pct": 11.61
+    },
+    {
+      "time_iso": "2026-04-26T19:00:00-07:00",
+      "air_temp_f": 46.21,
+      "relative_humidity_pct": 39.2,
+      "dew_point_f": 22.73,
+      "cloud_cover_pct": 2.92
+    },
+    {
+      "time_iso": "2026-04-26T20:00:00-07:00",
+      "air_temp_f": 42.83,
+      "relative_humidity_pct": 52.89,
+      "dew_point_f": 26.83,
+      "cloud_cover_pct": 2.98
+    },
+    {
+      "time_iso": "2026-04-26T21:00:00-07:00",
+      "air_temp_f": 42.3,
+      "relative_humidity_pct": 51.37,
+      "dew_point_f": 25.63,
+      "cloud_cover_pct": 2.46
+    },
+    {
+      "time_iso": "2026-04-26T22:00:00-07:00",
+      "air_temp_f": 41.6,
+      "relative_humidity_pct": 55.86,
+      "dew_point_f": 27.01,
+      "cloud_cover_pct": 0.0
+    },
+    {
+      "time_iso": "2026-04-26T23:00:00-07:00",
+      "air_temp_f": 38.89,
+      "relative_humidity_pct": 63.01,
+      "dew_point_f": 27.37,
+      "cloud_cover_pct": 0.06
+    }
+  ]
+}
