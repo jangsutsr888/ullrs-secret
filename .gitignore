@@ -6,6 +6,7 @@ venv/
 *.pyc
 downloaded_data.tmp
 *.json
+!tests/data/*.json
 *.png
 !example/*.png
 *.csv
