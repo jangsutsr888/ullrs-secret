@@ -46,8 +46,13 @@ def main():
         aspect_deg=terrain['aspect_deg']
     )
 
-    print("Opening plot...")
-    plt.show()
+    output_path = os.path.abspath(os.path.join(current_dir, "..", "example", "integration-consolidation-profile.png"))
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    print(f"Saved integration chart to {output_path}")
+
+    if os.environ.get("ULLRS_SECRET_NO_SHOW") != "1":
+        print("Opening plot...")
+        plt.show()
 
 
 if __name__ == "__main__":

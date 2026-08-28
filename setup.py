@@ -24,6 +24,7 @@ setup(
     ],
     extras_require={
         "test": ["pytest"],
+        "docs": ["sphinx>=8,<9"],
     },
     entry_points={
         "console_scripts": [

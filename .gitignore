@@ -12,5 +12,6 @@ downloaded_data.tmp
 !example/*.png
 *.csv
 downloaded_weather.xml
-/docs/*
+docs/_build/
+docs/_generated/
 *.nc

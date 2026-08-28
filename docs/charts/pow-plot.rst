@@ -1,0 +1,175 @@
+``pow-plot``
+============
+
+Purpose
+-------
+
+``pow-plot`` estimates when fresh, dry powder will irreversibly settle or
+become heavy. It is intended for the period immediately after snowfall, before
+the snow has entered a mature corn cycle.
+
+Principle
+---------
+
+The command computes effective temperature for the requested slope and splits
+the curve at every crossing of 32 degrees Fahrenheit. Red regions are melt
+segments and blue regions are freeze segments. Each region is annotated with
+the trapezoidal integral of its distance from 32 in Fahrenheit-hours.
+
+The plot marks powder as degraded at the interpolated time when cumulative
+melt within one melt segment reaches 15 F-hrs.
+
+If a melt segment has occurred but has not yet crossed 15 F-hrs, the next
+freeze segment is treated as a failed recovery when either of these conditions
+is true:
+
+* freeze EFDH is at most 30 F-hrs; or
+* freeze EFDH is at most 80 percent of the preceding melt ETDH.
+
+Once either degradation rule fires, the plot does not return to a powder state.
+This matches the structural idea that melted dendrites do not become fresh
+powder again when they refreeze.
+
+.. important::
+
+   The weather JSON does not contain snowfall. A new snowfall is a conceptual
+   hard reset, but the command cannot detect it automatically. Start a new input
+   period at the storm or interpret later snowfall manually.
+
+Usage
+-----
+
+.. code-block:: console
+
+   $ ullrs-secret pow-plot [OPTIONS] FILE
+
+.. list-table::
+   :header-rows: 1
+   :widths: 24 20 56
+
+   * - Option
+     - Default
+     - Meaning
+   * - ``FILE``
+     - required
+     - Standard weather JSON produced by an importer
+   * - ``--start FLOAT``
+     - first sample
+     - Start offset in days from the first observation
+   * - ``--end FLOAT``
+     - last sample
+     - End offset in days from the first observation
+   * - ``--slope FLOAT``
+     - ``0.0``
+     - Slope angle in degrees
+   * - ``--aspect FLOAT``
+     - ``180.0``
+     - Aspect clockwise from north
+   * - ``--elevation FLOAT``
+     - source elevation
+     - Target elevation in feet
+   * - ``--no-show``
+     - off
+     - Save without opening a Matplotlib window
+   * - ``-o, --output TEXT``
+     - ``pow_forecast_chart.png``
+     - PNG output path
+
+Example: compare a sheltered north aspect
+------------------------------------------
+
+.. code-block:: console
+
+   $ ullrs-secret pow-plot weather_data.json \
+       --start 0 --end 3 \
+       --slope 35 --aspect 0 --elevation 7000 \
+       --no-show --output powder_north_7000.png
+
+Reading the chart
+-----------------
+
+Teal curve
+   Total effective temperature. This is the line that is integrated.
+
+Red dashed horizontal line
+   The 32-degree melt/freeze boundary.
+
+Red and blue shading
+   Melt and freeze segments. Labels show ETDH or EFDH for the complete segment.
+
+Gray dash-dot vertical lines
+   Interpolated transitions across 32 degrees.
+
+Purple vertical marker
+   The first modeled loss of powder quality, either at 15 F-hrs or at the end
+   of a failed recovery segment.
+
+Interpretation notes
+--------------------
+
+The 15 F-hr threshold is an empirical state boundary, not a measurement of
+water content. Wind effect, solar horizon masking, tree cover, and dirty snow
+are not independently modeled. Treat a transition near your intended ski time
+as uncertainty, not a precise appointment.
+
+Real-world integration example
+------------------------------
+
+Time and place
+~~~~~~~~~~~~~~
+
+This example is tied to a specific forecast period and terrain point. The
+weather fixture stores the coarse ERA5 grid cell; the integration runner then
+queries a separate backcountry target and projects the grid weather to that
+terrain. The two coordinates are deliberately shown separately.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 24 76
+
+   * - Field
+     - Value
+   * - Forecast shown
+     - March 14, 2026 00:00 through March 15, 2026 23:00, UTC-07:00
+       (Pacific Daylight Time). The checked-in fixture begins on March 12, but
+       the runner uses ``start_days=2.0``.
+   * - ERA5 fixture grid
+     - 48.75000, -121.75000 at 3,333.6 feet
+   * - Target terrain
+     - `48.85868, -121.69884
+       <https://www.openstreetmap.org/?mlat=48.85868&mlon=-121.69884#map=15/48.85868/-121.69884>`_
+       at 4,904.9 feet; 35.2-degree slope; 194.4-degree aspect
+       (south-southwest)
+   * - Geographic setting
+     - Bagley Lakes basin below Mount Herman in Heather Meadows, Whatcom
+       County, Washington, immediately west of the Mt. Baker Ski Area
+
+The place name is a geographic interpretation of the terrain coordinate, not
+a field stored in the JSON. The target lies in the Bagley Lakes--Herman Saddle
+part of Heather Meadows, so this is a useful maritime-winter powder example
+rather than an abstract test point.
+
+.. figure:: ../_generated/examples/integration-pow-forecast.png
+   :alt: Powder preservation chart generated by the powder integration test.
+   :width: 100%
+
+   Output from ``integration_test/run_pow.py`` using the checked-in four-day
+   ERA5 fixture and live terrain at 48.85868, -121.69884.
+
+The first melt period reaches 15 F-hrs shortly after noon on March 14 and the
+chart marks powder degradation at the interpolated crossing.
+
+Mountaineering and ski context
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `US Forest Service Mount Baker winter activity guide
+<https://www.fs.usda.gov/Internet/FSE_DOCUMENTS/stelprdb5229211.pdf>`_
+describes Heather Meadows as winter recreation terrain where conditions can
+change quickly and tells backcountry travelers to check weather and avalanche
+forecasts and carry rescue equipment. The `Northwest Avalanche Center zone
+guide <https://nwac.us/updated-mountain-weather-locations-names/>`_ places
+Highway 542 and the Mt. Baker Ski Area in its **West North** zone.
+
+At 35.2 degrees, this sample is steep enough that avalanche terrain matters.
+The purple line answers only a snow-quality question: it is not evidence that
+the slope is stable, open, controlled, or appropriate for a particular party.
