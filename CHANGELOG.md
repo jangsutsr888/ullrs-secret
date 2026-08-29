@@ -12,5 +12,5 @@ No changes yet.
 
 Initial public release.
 
-[Unreleased]: https://github.com/jangsutsr888/ullrs-secret/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/jangsutsr888/ullrs-secret/compare/v1.0.0...develop
 [1.0.0]: https://github.com/jangsutsr888/ullrs-secret/tree/v1.0.0

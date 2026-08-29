@@ -100,6 +100,16 @@ images. Run them without opening Matplotlib windows with:
 ULLRS_SECRET_NO_SHOW=1 make integration_test
 ```
 
+## Development branches
+
+- `develop` is the integration branch for normal development. Create feature
+  and fix branches from `develop`, and merge them back into `develop`.
+- `main` represents the latest released state. Changes reach `main` through a
+  release pull request from `develop`; ordinary development should not be
+  committed directly to `main`.
+- An urgent production hotfix starts from `main`, returns to `main` through a
+  pull request, and is then merged back into `develop`.
+
 ## Releasing
 
 Release notes live in
@@ -111,10 +121,17 @@ Actions and PyPI Trusted Publishing; no API token is stored in the repository.
 PyPI files and version numbers are immutable. Choose a new PEP 440 version for
 every release and do not reuse a version that has reached PyPI.
 
-1. Update the version in `setup.py`, `ullrs_secret/__init__.py`, and
+1. Start from an up-to-date `develop` branch:
+
+   ```console
+   git switch develop
+   git pull --ff-only origin develop
+   ```
+
+2. Update the version in `setup.py`, `ullrs_secret/__init__.py`, and
    `docs/conf.py`. In `docs/conf.py`, update both `release` and `html_title`.
-2. Finalize the matching entry in `CHANGELOG.md` with the release date.
-3. Start from a clean environment and run the complete local validation:
+3. Finalize the matching entry in `CHANGELOG.md` with the release date.
+4. Start from a clean environment and run the complete local validation:
 
    ```console
    make clean
@@ -126,21 +143,32 @@ every release and do not reuse a version that has reached PyPI.
    git diff --check
    ```
 
-4. Commit the release, create an annotated `vX.Y.Z` tag on that commit, and
-   push the branch before the tag:
+5. Commit the release preparation on `develop` and push it:
 
    ```console
    git add README.md CHANGELOG.md setup.py ullrs_secret/__init__.py docs/conf.py
-   git commit -m "Release X.Y.Z"
+   git commit -m "Prepare release X.Y.Z"
+   git push origin develop
+   ```
+
+6. Open a pull request from `develop` into `main`. Review the complete release
+   diff and merge it with **Create a merge commit**. Do not squash or rebase the
+   release pull request; preserving the merge relationship allows `develop` to
+   fast-forward to the released commit afterward.
+7. Update local `main`, tag the merge commit, and push only the tag:
+
+   ```console
+   git switch main
+   git pull --ff-only origin main
    git tag -a vX.Y.Z -m "Ullr's Secret X.Y.Z"
-   git push origin main
    git push origin vX.Y.Z
    ```
 
-5. Watch the **Publish to PyPI** workflow in GitHub Actions. The tag push builds
-   the sdist and wheel from the tagged commit and publishes them through the
-   configured Trusted Publisher.
-6. Confirm the version and both distribution files on
+8. Watch the **Publish to PyPI** workflow in GitHub Actions. The workflow
+   verifies that the tagged commit belongs to `main`, builds the sdist and
+   wheel from that commit, and publishes them through the configured Trusted
+   Publisher.
+9. Confirm the version and both distribution files on
    [PyPI](https://pypi.org/project/ullrs-secret/), then test the public index in
    a fresh environment:
 
@@ -151,7 +179,18 @@ every release and do not reuse a version that has reached PyPI.
    /tmp/ullrs-secret-release-check/bin/ullrs-secret --help
    ```
 
-Read the Docs rebuilds `latest` from `main` after the release commit is pushed.
+10. Fast-forward `develop` to the release merge commit so the next development
+    cycle starts from exactly what was published:
+
+    ```console
+    git switch develop
+    git fetch origin
+    git merge --ff-only origin/main
+    git push origin develop
+    ```
+
+Read the Docs rebuilds `latest` from `main` after the release pull request is
+merged.
 The workflow's manual trigger is available for recovery, but tagged releases
 are the canonical publishing path.
 

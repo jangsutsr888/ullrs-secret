@@ -32,6 +32,17 @@
 - Do not present chart output as avalanche, glacier-travel, navigation, or
   route-safety advice.
 
+## Branch workflow
+
+- Use `develop` as the integration branch for normal development. Start
+  feature and fix branches from `develop` and target `develop` when they
+  are merged.
+- Keep `main` at the latest released state. Do not land ordinary development
+  directly on `main`.
+- Prepare versions and release notes on `develop`. Release by merging a
+  `develop` to `main` pull request with a merge commit, then tag that commit on
+  `main`. After publishing, fast-forward `develop` to `main`.
+
 ## Documentation conventions
 
 - Documentation content must be English.
