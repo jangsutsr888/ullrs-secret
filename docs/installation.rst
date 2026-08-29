@@ -8,6 +8,27 @@ Ullr's Secret requires Python 3.10 or newer and Git. Use a virtual environment
 so that its scientific Python dependencies do not modify the system Python
 installation.
 
+Install from PyPI
+-----------------
+
+Create an isolated environment and install the published package from PyPI:
+
+.. code-block:: console
+
+   $ python3 -m venv .venv
+   $ source .venv/bin/activate
+   $ python -m pip install --upgrade pip
+   $ python -m pip install ullrs-secret
+
+On Windows PowerShell, activate the environment with
+``.venv\Scripts\Activate.ps1`` instead.
+
+Upgrade an existing PyPI installation in the active environment with:
+
+.. code-block:: console
+
+   $ python -m pip install --upgrade ullrs-secret
+
 Install from source
 -------------------
 
@@ -23,10 +44,7 @@ source tree:
    $ python -m pip install --upgrade pip
    $ python -m pip install .
 
-On Windows PowerShell, activate the environment with
-``.venv\Scripts\Activate.ps1`` instead.
-
-Verify the installation before fetching weather or generating charts:
+Verify either installation before fetching weather or generating charts:
 
 .. code-block:: console
 
@@ -35,8 +53,8 @@ Verify the installation before fetching weather or generating charts:
 
 The second command should print ``1.0.0``.
 
-Update a source installation
-----------------------------
+Update a source checkout
+------------------------
 
 Pull the latest ``main`` branch and reinstall it into the active virtual
 environment:

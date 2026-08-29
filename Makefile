@@ -3,6 +3,7 @@
 VENV := venv
 PYTHON := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
+DOCS_STAMP := $(VENV)/.docs-installed
 
 venv:
 	python3 -m venv $(VENV)
@@ -19,10 +20,11 @@ integration_test: install
 	$(PYTHON) integration_test/run_consolidation.py
 	$(PYTHON) integration_test/run_corn.py
 
-$(VENV)/bin/sphinx-build: setup.py | venv
+$(DOCS_STAMP): setup.py pyproject.toml | venv
 	$(PIP) install -e ".[docs]"
+	touch $(DOCS_STAMP)
 
-docs-install: $(VENV)/bin/sphinx-build
+docs-install: $(DOCS_STAMP)
 
 docs-assets: | venv
 	$(PYTHON) scripts/prepare_docs_assets.py

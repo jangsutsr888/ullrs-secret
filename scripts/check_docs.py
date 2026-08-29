@@ -10,7 +10,7 @@ from pathlib import Path
 
 EXPECTED_PAGES = {
     "index.html": "Ullr's Secret documentation",
-    "installation.html": "Install from source",
+    "installation.html": "Install from PyPI",
     "getting-started.html": "Getting started",
     "model.html": "Effective-temperature model",
     "limitations.html": "Limitations and field use",

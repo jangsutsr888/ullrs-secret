@@ -37,17 +37,17 @@ command can consume.
 Python 3.10 or newer is required.
 
 ```console
-git clone https://github.com/jangsutsr888/ullrs-secret.git
-cd ullrs-secret
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install .
+python -m pip install --upgrade pip
+python -m pip install ullrs-secret
 ullrs-secret --help
 ```
 
 See the
 [installation runbook](https://ullrs-secret.readthedocs.io/en/latest/installation.html)
-for verification, updates, Windows activation, and contributor setup.
+for source installation, verification, updates, Windows activation, and
+contributor setup.
 
 ## Quick start
 
