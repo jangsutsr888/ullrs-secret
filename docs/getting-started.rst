@@ -4,16 +4,10 @@ Getting started
 Requirements
 ------------
 
-Ullr's Secret requires Python 3.10 or newer. The repository Makefile creates a
-virtual environment named ``venv`` and installs the package in editable mode.
-
-.. code-block:: console
-
-   $ make install
-   $ source venv/bin/activate
-   $ ullrs-secret --help
-
-The project has been tested primarily on Python 3.10.
+Ullr's Secret requires Python 3.10 or newer. Follow the
+:doc:`installation` runbook to create an isolated environment, install from
+the public source repository, and verify the CLI. The project has been tested
+primarily on Python 3.10.
 
 The normal workflow
 -------------------

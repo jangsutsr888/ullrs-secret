@@ -1,12 +1,30 @@
+from pathlib import Path
+
 from setuptools import find_packages, setup
+
+
+PROJECT_ROOT = Path(__file__).parent
+LONG_DESCRIPTION = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="ullrs-secret",
-    version="0.1.0",
+    version="1.0.0",
     description="Ullr's Secret — backcountry ski snow conditions forecaster",
-    license="AGPL-3.0",
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/markdown",
+    url="https://github.com/jangsutsr888/ullrs-secret",
+    project_urls={
+        "Documentation": "https://ullrs-secret.readthedocs.io/",
+        "Issues": "https://github.com/jangsutsr888/ullrs-secret/issues",
+        "Source": "https://github.com/jangsutsr888/ullrs-secret",
+    },
+    license="AGPL-3.0-or-later",
+    license_files=("LICENSE",),
     classifiers=[
-        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Topic :: Scientific/Engineering :: Atmospheric Science",
     ],
     python_requires=">=3.10",
     packages=find_packages(include=["ullrs_secret*"]),

@@ -9,9 +9,12 @@ preservation, corn timing, and melt-freeze consolidation.
 > It does not model buried weak layers, wind slabs, terrain traps, or local
 > avalanche hazard.
 
-The model derivation is available as [English](core_calc_en.pdf) and
-[Chinese](core_calc_cn.pdf) PDFs. Detailed usage and model documentation live
-in the [Sphinx documentation](docs/index.rst).
+The model derivation is available as
+[English](https://github.com/jangsutsr888/ullrs-secret/blob/main/core_calc_en.pdf)
+and
+[Chinese](https://github.com/jangsutsr888/ullrs-secret/blob/main/core_calc_cn.pdf)
+PDFs. Detailed usage and model documentation live on
+[Read the Docs](https://ullrs-secret.readthedocs.io/).
 
 ## Commands
 
@@ -34,10 +37,17 @@ command can consume.
 Python 3.10 or newer is required.
 
 ```console
-make install
-source venv/bin/activate
+git clone https://github.com/jangsutsr888/ullrs-secret.git
+cd ullrs-secret
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install .
 ullrs-secret --help
 ```
+
+See the
+[installation runbook](https://ullrs-secret.readthedocs.io/en/latest/installation.html)
+for verification, updates, Windows activation, and contributor setup.
 
 ## Quick start
 
@@ -58,10 +68,10 @@ Use `ullrs-secret COMMAND --help` for the current CLI options. The dedicated
 documentation pages explain the algorithms and include output from the
 integration tests:
 
-- [Chart commands](docs/charts/index.rst)
-- [Weather importers](docs/importers/index.rst)
-- [Effective-temperature model](docs/model.rst)
-- [Limitations and field use](docs/limitations.rst)
+- [Chart commands](https://ullrs-secret.readthedocs.io/en/latest/charts/index.html)
+- [Weather importers](https://ullrs-secret.readthedocs.io/en/latest/importers/index.html)
+- [Effective-temperature model](https://ullrs-secret.readthedocs.io/en/latest/model.html)
+- [Limitations and field use](https://ullrs-secret.readthedocs.io/en/latest/limitations.html)
 
 ## Documentation
 
@@ -92,4 +102,5 @@ ULLRS_SECRET_NO_SHOW=1 make integration_test
 
 ## License
 
-GNU Affero General Public License v3.0 or later. See [LICENSE](LICENSE).
+GNU Affero General Public License v3.0 or later. See
+[LICENSE](https://github.com/jangsutsr888/ullrs-secret/blob/main/LICENSE).

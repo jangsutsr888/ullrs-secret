@@ -28,7 +28,8 @@ three chart commands can then consume that file.
 Documentation map
 -----------------
 
-* :doc:`getting-started` covers installation and the normal command workflow.
+* :doc:`installation` is the installation and verification runbook.
+* :doc:`getting-started` covers the normal command workflow.
 * :doc:`model` explains wet-bulb and radiative effective temperature.
 * Chart commands: :doc:`charts/pow-plot`, :doc:`charts/corn-plot`, and
   :doc:`charts/consolidation-plot` each have a dedicated principle-and-usage
@@ -49,6 +50,7 @@ Documentation map
    :maxdepth: 3
    :caption: User guide
 
+   installation
    getting-started
    model
    charts/index

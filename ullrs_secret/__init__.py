@@ -6,6 +6,9 @@ Public API Module
 import logging
 import sys
 
+
+__version__ = "1.0.0"
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(message)s",
@@ -28,6 +31,7 @@ from ullrs_secret.snotel import find_nearest_snotel_stations, get_snotel_report
 from ullrs_secret.terrain import get_terrain_data
 
 __all__ = [
+    "__version__",
     # Core physics & math
     "wet_bulb_f",
     "calculate_radiative_equivalent_temps",
