@@ -8,7 +8,7 @@ LONG_DESCRIPTION = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="ullrs-secret",
-    version="1.0.0",
+    version="1.0.1",
     description="Ullr's Secret — backcountry ski snow conditions forecaster",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",

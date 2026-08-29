@@ -12,7 +12,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 project = "Ullr's Secret"
 author = "Ullr's Secret contributors"
 copyright = "2026, Ullr's Secret contributors"
-release = "1.0.0"
+release = "1.0.1"
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -30,7 +30,7 @@ html_theme_options = {
     "stickysidebar": True,
     "collapsiblesidebar": False,
 }
-html_title = "Ullr's Secret 1.0 documentation"
+html_title = "Ullr's Secret 1.0.1 documentation"
 html_short_title = "Ullr's Secret"
 html_static_path = []
 html_show_sourcelink = True

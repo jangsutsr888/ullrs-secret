@@ -6,6 +6,10 @@ when publishing a release.
 
 ## [Unreleased]
 
+No changes yet.
+
+## [1.0.1] - 2026-08-28
+
 - Updated the documentation quick example to install from PyPI and added a
   dedicated feedback and issue-reporting page.
 
@@ -13,5 +17,6 @@ when publishing a release.
 
 Initial public release.
 
-[Unreleased]: https://github.com/jangsutsr888/ullrs-secret/compare/v1.0.0...develop
+[Unreleased]: https://github.com/jangsutsr888/ullrs-secret/compare/v1.0.1...develop
+[1.0.1]: https://github.com/jangsutsr888/ullrs-secret/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/jangsutsr888/ullrs-secret/tree/v1.0.0

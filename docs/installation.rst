@@ -51,7 +51,8 @@ Verify either installation before fetching weather or generating charts:
    $ ullrs-secret --help
    $ python -c "import ullrs_secret; print(ullrs_secret.__version__)"
 
-The second command should print ``1.0.0``.
+The second command should print the installed release version without an
+error.
 
 Update a source checkout
 ------------------------
