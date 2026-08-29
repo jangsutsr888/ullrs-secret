@@ -100,6 +100,61 @@ images. Run them without opening Matplotlib windows with:
 ULLRS_SECRET_NO_SHOW=1 make integration_test
 ```
 
+## Releasing
+
+Release notes live in
+[CHANGELOG.md](https://github.com/jangsutsr888/ullrs-secret/blob/main/CHANGELOG.md).
+Add user-visible changes under **Unreleased** as they land, then move them under
+a dated version heading when preparing a release. PyPI publishing uses GitHub
+Actions and PyPI Trusted Publishing; no API token is stored in the repository.
+
+PyPI files and version numbers are immutable. Choose a new PEP 440 version for
+every release and do not reuse a version that has reached PyPI.
+
+1. Update the version in `setup.py`, `ullrs_secret/__init__.py`, and
+   `docs/conf.py`. In `docs/conf.py`, update both `release` and `html_title`.
+2. Finalize the matching entry in `CHANGELOG.md` with the release date.
+3. Start from a clean environment and run the complete local validation:
+
+   ```console
+   make clean
+   make test
+   make docs-check
+   venv/bin/python -m pip install --upgrade build twine
+   venv/bin/python -m build
+   venv/bin/python -m twine check dist/*
+   git diff --check
+   ```
+
+4. Commit the release, create an annotated `vX.Y.Z` tag on that commit, and
+   push the branch before the tag:
+
+   ```console
+   git add README.md CHANGELOG.md setup.py ullrs_secret/__init__.py docs/conf.py
+   git commit -m "Release X.Y.Z"
+   git tag -a vX.Y.Z -m "Ullr's Secret X.Y.Z"
+   git push origin main
+   git push origin vX.Y.Z
+   ```
+
+5. Watch the **Publish to PyPI** workflow in GitHub Actions. The tag push builds
+   the sdist and wheel from the tagged commit and publishes them through the
+   configured Trusted Publisher.
+6. Confirm the version and both distribution files on
+   [PyPI](https://pypi.org/project/ullrs-secret/), then test the public index in
+   a fresh environment:
+
+   ```console
+   python3 -m venv /tmp/ullrs-secret-release-check
+   /tmp/ullrs-secret-release-check/bin/python -m pip install \
+       --no-cache-dir ullrs-secret==X.Y.Z
+   /tmp/ullrs-secret-release-check/bin/ullrs-secret --help
+   ```
+
+Read the Docs rebuilds `latest` from `main` after the release commit is pushed.
+The workflow's manual trigger is available for recovery, but tagged releases
+are the canonical publishing path.
+
 ## License
 
 GNU Affero General Public License v3.0 or later. See
