@@ -14,6 +14,7 @@ EXPECTED_PAGES = {
     "getting-started.html": "Getting started",
     "model.html": "Effective-temperature model",
     "limitations.html": "Limitations and field use",
+    "feedback.html": "Feedback and issue reporting",
     "charts/pow-plot.html": "pow-plot",
     "charts/corn-plot.html": "corn-plot",
     "charts/consolidation-plot.html": "consolidation-plot",
@@ -34,6 +35,7 @@ NAVIGATION_TARGETS = [
     "importers/openmeteo.html",
     "importers/nws.html",
     "importers/era5.html",
+    "feedback.html",
 ]
 
 REQUIRED_IMAGE_NAMES = [

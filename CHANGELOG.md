@@ -6,7 +6,8 @@ when publishing a release.
 
 ## [Unreleased]
 
-No changes yet.
+- Updated the documentation quick example to install from PyPI and added a
+  dedicated feedback and issue-reporting page.
 
 ## [1.0.0] - 2026-08-28
 

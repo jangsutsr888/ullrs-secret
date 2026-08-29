@@ -15,8 +15,10 @@ Quick example
 
 .. code-block:: console
 
-   $ make install
-   $ source venv/bin/activate
+   $ python3 -m venv .venv
+   $ source .venv/bin/activate
+   $ python -m pip install --upgrade pip
+   $ python -m pip install ullrs-secret
    $ ullrs-secret import openmeteo --lat 46.8523 --lon -121.7603 \
        --model best_match --output weather_data.json
    $ ullrs-secret corn-plot weather_data.json --slope 35 --aspect 135 \
@@ -38,6 +40,8 @@ Documentation map
   :doc:`importers/era5` each have a dedicated source page.
 * :doc:`reference/weather-format` defines the importer-to-model data contract.
 * :doc:`limitations` explains where the model should and should not be trusted.
+* :doc:`feedback` explains how to report bugs, request improvements, and share
+  field feedback.
 
 .. warning::
 
@@ -56,6 +60,7 @@ Documentation map
    charts/index
    importers/index
    limitations
+   feedback
 
 .. toctree::
    :maxdepth: 3
